@@ -1,8 +1,9 @@
 import os
 import boto3
 import argparse
-from botocore.exceptions import NoCredentialsError, ClientError
+from botocore.exceptions import ClientError
 import sys
+
 
 def download_directory(s3_client, bucket_name, s3_folder, local_folder):
     paginator = s3_client.get_paginator('list_objects_v2')
@@ -21,6 +22,7 @@ def download_directory(s3_client, bucket_name, s3_folder, local_folder):
                     s3_client.download_file(bucket_name, s3_file_path, local_file_path)
                 except Exception as e:
                     print(f"Failed to download {s3_file_path}: {e}")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Download a directory of an S3 bucket to a local folder.")
@@ -52,6 +54,7 @@ def main():
         else:
             print(f"An error occurred: {e}")
             sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

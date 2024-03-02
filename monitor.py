@@ -5,6 +5,7 @@ from botocore.exceptions import NoCredentialsError, ClientError
 import sys
 import time
 
+
 def upload_directory(s3_client, local_folder, bucket_name, s3_folder):
     for root, dirs, files in os.walk(local_folder):
         for filename in files:
@@ -22,6 +23,7 @@ def upload_directory(s3_client, local_folder, bucket_name, s3_folder):
                 print(f"Failed to upload {local_path} to {s3_path}: {e}")
             except Exception as e:
                 print(f"Unexpected error: {e}")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Upload a local directory to an S3 bucket.")
@@ -63,6 +65,7 @@ def main():
             upload_directory(s3_client, args.local_folder, args.bucket_name, args.s3_folder)
             print("Waiting 5 minutes before next sync...")
             time.sleep(300)  # Sleep for 5 minutes
+
 
 if __name__ == "__main__":
     main()
