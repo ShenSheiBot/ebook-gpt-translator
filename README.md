@@ -1,52 +1,65 @@
+# eBook GPT Translator Setup Guide
 
-## Environment Setup
+This guide provides a step-by-step process for setting up the eBook Translator for converting English ebooks into Chinese.
 
-Requirements: poetry (`pip install poetry`), python 3.11
+## Prerequisites
+- poetry: Install using `pip install poetry`.
+- Python 3.11
+
+## Repository Clone and Dependency Installation
+
+Clone the repository and install the necessary dependencies:
 
 ```bash
-git clone https://github.com/ShenSheiBot/gemini-ebook-translator.git
-cd gemini-ebook-translator
+git clone https://github.com/ShenSheiBot/ebook-gpt-translator.git
+cd ebook-gpt-translator
 poetry install
 ```
 
-## English -> Chinese Translation
+## English to Chinese Translation Setup
 
-Move the book to the `output/[中文书名]/` directory, rename the book to `input.docx` or `input.epub`. Rename `.env.example` to `.env` and fill in the following values:
+1. Place the book file in the `output/[Chinese Book Name]/` directory and rename it to `input.docx` or `input.epub`.
+
+2. Rename the file `.env.example` to `.env` and update it with the following configurations:
 
 ```bash
-CN_TITLE=[中文书名]
-JP_TITLE=[英文书名]
-TRANSLATION_TITLE_RETRY_COUNT=[批量翻译epub标题时失败重试次数]
+CN_TITLE=[Chinese Book Name]
+JP_TITLE=[English Book Name]
+TRANSLATION_TITLE_RETRY_COUNT=[Retry Count for Batch Translation of EPUB Titles]
 ```
 
-Rename `translation.yaml.example` to `translation.yaml` and fill in the [Gemini API keys](https://aistudio.google.com/app/u/0/apikey?pli=1) and [Poe API keys](https://poe.com/api_key).
+3. Rename `translation.yaml.example` to `translation.yaml` and populate it with your [Gemini API keys](https://aistudio.google.com/app/u/0/apikey?pli=1) and [Poe API keys](https://poe.com/api_key).
 
 ```yaml
 {
-    "Gemini-Pro-api": {  # 可自定义名称，只要包含Gemini即可
-        "name": "gemini-pro",  # 模型名称，不建议修改
+    "Gemini-Pro-api": {
+        "name": "gemini-pro",
         "type": "api",
-        "retry_count": 3,  # 失败重试次数 （若翻译长度明显错误或API无法访问，详见`validate`)
-        "key": ""
+        "retry_count": 3,
+        "key": "[Your Gemini API Key]"
     },
-    "Poe-api": {  # 可自定义名称，只要包含Poe即可
-        "name": "Gemini-Pro",  # 模型名称，支持任意Poe模型
+    "Poe-api": {
+        "name": "Gemini-Pro",
         "type": "api",
         "retry_count": 1,
-        "key": ""
+        "key": "[Your Poe API Key]"
     }
 }
 ```
 
-Then copy the book to `output/中文书名/`, rename to `input.epub` or `input.docx`. Run the following command:
+4. Ensure the book file is in the `output/[Chinese Book Name]/` directory, renamed accordingly to `input.epub` or `input.docx`.
+
+5. Execute the following command to start the translation process:
+
 
 ```bash
-python docxloader.py  # or ...
-python epubloader.py
+python docxloader.py  # For DOCX files
+# or
+python epubloader.py  # For EPUB files
 ```
 
-The translation process is resumable. If the translation process is interrupted, run the command again. It will generate both a Chinese and an English + Chinese version of the book in the `output/[中文书名]/` directory.
+The translation process can be paused and resumed. If interrupted, simply rerun the command to continue. Upon completion, the translated book will be available in both Chinese and bilingual (English + Chinese) formats in the output/[Chinese Book Name]/ directory.
 
-## Support Me
+## Support the Developer
 
-Please subscribe to the Zhihu literary critic [甚谁](https://www.zhihu.com/people/sakuraayane_justice)
+Consider subscribing to the Zhihu literary critic [甚谁](https://www.zhihu.com/people/sakuraayane_justice) for his insightful content.
