@@ -31,14 +31,14 @@ jobs:
 
     - name: Copy input.epub and config.yaml
       run: |
-        mkdir -p output/$CN_TITLE
-        wget https://pub-2df73a5be14443b7aa337f4ab7085b03.r2.dev/input.epub -O output/$CN_TITLE/input.epub
+        mkdir -p output/${{ vars.CN_TITLE }}
+        wget https://pub-2df73a5be14443b7aa337f4ab7085b03.r2.dev/input.epub -O output/${{ vars.CN_TITLE }}/input.epub
         sed -i 's/POE-API-KEY/'"${{ secrets.POE_API_KEY }}"'/g' translation.yaml.example
         sed -i 's/GOOGLE-API-KEY/'"${{ secrets.GOOGLE_API_KEY }}"'/g' translation.yaml.example
         mv translation.yaml.example translation.yaml
-        sed -i 's/CN-TITLE/'"$CN_TITLE"'/g' .env.example
-        sed -i 's/JP-TITLE/'"$JP_TITLE"'/g' .env.example
-        sed -i 's/TRANSLATION-TITLE_RETRY-COUNT/'"$TRANSLATION_TITLE_RETRY_COUNT"'/g' .env.example
+        sed -i 's/CN-TITLE/'"${{ vars.CN_TITLE }}"'/g' .env.example
+        sed -i 's/JP-TITLE/'"${{ vars.JP_TITLE }}"'/g' .env.example
+        sed -i 's/TRANSLATION-TITLE-RETRY-COUNT/'"${{ vars.TRANSLATION_TITLE_RETRY_COUNT }}"'/g' .env.example
         mv .env.example .env
         cat .env
       # Make sure to replace 'path/to/your/input.epub' and 'path/to/your/config.yaml'
