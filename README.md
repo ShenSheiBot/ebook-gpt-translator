@@ -11,9 +11,10 @@ This guide provides a step-by-step process for setting up the eBook Translator f
 Clone the repository and install the necessary dependencies:
 
 ```bash
+# It is recommended to create a new virtual environment before installing the dependencies.
 git clone https://github.com/ShenSheiBot/ebook-gpt-translator.git
 cd ebook-gpt-translator
-poetry install
+poetry install --no-root
 ```
 
 ## English to Chinese Translation Setup
