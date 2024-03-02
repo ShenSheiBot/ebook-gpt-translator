@@ -73,7 +73,7 @@ def main():
             
             if not all([remove_leading_numbers(title) in title_buffer for title in jp_titles_]):
                 cn_titles_ = []
-                title_retry_count = config['TRANSLATION_TITLE_RETRY_COUNT'] + 1
+                title_retry_count = int(config['TRANSLATION_TITLE_RETRY_COUNT']) + 1
                 
                 while len(cn_titles_) != len(jp_titles_) and title_retry_count > 0:
                     ### Start translation
