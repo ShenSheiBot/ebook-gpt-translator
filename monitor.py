@@ -17,12 +17,17 @@ def create_bucket(s3_client, bucket_name):
         print(f"An error occurred when creating the bucket: {e}")
         sys.exit(1)
 
-def sync_folder_to_bucket(s3_client, local_folder, bucket_name):
-    for root, dirs, files in os.walk(local_folder):
+def sync_folder_to_bucket(s3_client, local_folder, bucket_name, s3_folder):
+    local_path_to_sync = os.path.join(local_folder, s3_folder)
+    
+    if not os.path.exists(local_path_to_sync):
+        print(f"Local path {local_path_to_sync} does not exist. Exiting.")
+        sys.exit(1)
+    
+    for root, dirs, files in os.walk(local_path_to_sync):
         for filename in files:
             local_path = os.path.join(root, filename)
-            relative_path = os.path.relpath(local_path, local_folder)
-            s3_path = relative_path
+            s3_path = os.path.join(s3_folder, os.path.relpath(local_path, local_path_to_sync))
 
             try:
                 s3_client.upload_file(local_path, bucket_name, s3_path)
@@ -39,7 +44,8 @@ def main():
     parser.add_argument("access_key", help="S3 Access Key ID")
     parser.add_argument("secret_key", help="S3 Secret Access Key")
     parser.add_argument("endpoint_url", help="S3 Endpoint URL")
-    parser.add_argument("bucket_name", help="S3 Bucket Name", default="book", nargs="?")
+    parser.add_argument("bucket_name", help="S3 Bucket Name")
+    parser.add_argument("--final", action="store_true", help="Run sync once and then quit")
 
     args = parser.parse_args()
 
@@ -62,11 +68,16 @@ def main():
             print(f"An error occurred: {e}")
             sys.exit(1)
 
-    while True:
-        sync_folder_to_bucket(s3_client, args.local_folder, args.bucket_name)
-        print(f"Next sync in 5 minutes...")
-        time.sleep(300)  # Sleep for 5 minutes
+    # Sync the folder A within local folder to S3 bucket/A
+    sync_folder_to_bucket(s3_client, args.local_folder, args.bucket_name, "A")
 
+    if args.final:
+        print("Upload complete. Exiting.")
+    else:
+        while True:
+            print("Waiting 5 minutes before next sync...")
+            time.sleep(300)  # Sleep for 5 minutes
+            sync_folder_to_bucket(s3_client, args.local_folder, args.bucket_name, "A")
 
 if __name__ == "__main__":
     main()
