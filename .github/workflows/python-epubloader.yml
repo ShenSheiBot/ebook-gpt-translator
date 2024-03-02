@@ -29,20 +29,19 @@ jobs:
         poetry install
 
     - name: Copy input.epub and config.yaml
-      env:
-        CN_TITLE: ${{ secrets.CN_TITLE }} # Use the secret set in the repo settings
       run: |
-        mkdir -p output/${CN_TITLE}
-        wget https://pub-2df73a5be14443b7aa337f4ab7085b03.r2.dev/input.epub -O output/${CN_TITLE}/input.epub
-        sed -i 's/POE-API-KEY/'"$POE_API_KEY"'/g' translation.yaml.example
-        sed -i 's/GOOGLE-API-KEY/'"$GOOGLE_API_KEY"'/g' translation.yaml.example
+        mkdir -p output/${{ secrets.CN_TITLE }}
+        wget https://pub-2df73a5be14443b7aa337f4ab7085b03.r2.dev/input.epub -O output/${{ secrets.CN_TITLE }}/input.epub
+        sed -i 's/POE-API-KEY/'"${{ secrets.POE_API_KEY }}"'/g' translation.yaml.example
+        sed -i 's/GOOGLE-API-KEY/'"${{ secrets.GOOGLE_API_KEY }}"'/g' translation.yaml.example
         mv translation.yaml.example translation.yaml
-        sed -i 's/CN-TITLE/'"$CN_TITLE"'/g' .env.example
-        sed -i 's/TRANSLATION-TITLE_RETRY-COUNT/'"$TRANSLATION_TITLE_RETRY_COUNT"'/g' .env.example
+        sed -i 's/CN-TITLE/'"${{ secrets.CN_TITLE }}"'/g' .env.example
+        sed -i 's/JP-TITLE/'"${{ secrets.JP_TITLE }}"'/g' .env.example
+        sed -i 's/TRANSLATION-TITLE_RETRY-COUNT/'"${{ secrets.TRANSLATION_TITLE_RETRY_COUNT }}"'/g' .env.example
         mv .env.example .env
       # Make sure to replace 'path/to/your/input.epub' and 'path/to/your/config.yaml'
       # with the actual paths to the files in your repository or set up to receive them as inputs.
 
     - name: Run epubloader.py script
       run: |
-        python epubloader.py
+        poetry run python epubloader.py
