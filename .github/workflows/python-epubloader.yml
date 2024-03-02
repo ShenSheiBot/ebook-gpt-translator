@@ -26,8 +26,8 @@ jobs:
     - name: Install dependencies
       run: |
         pip install poetry
+        poetry config virtualenvs.create false
         poetry install --no-root
-        poetry env use system
 
     - name: Copy input.epub and config.yaml
       run: |
