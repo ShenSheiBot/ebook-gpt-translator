@@ -47,12 +47,6 @@ def translate(jp_text, mode="translation", dryrun=False):
             prompt = generate_prompt(jp_text, mode=mode)
             logger.info("\n-------- Prompt --------\n\n" + prompt + "\n------------------------\n\n")
         
-        if mode == "title_translation":
-            if 'Poe' not in name:
-                continue
-            else:
-                model['name'] = "ChatGPT"
-        
         retry_count = model['retry_count']
         
         logger.info("Translating using " + name + " ...")
