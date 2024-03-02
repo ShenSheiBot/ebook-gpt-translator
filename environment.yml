@@ -1,0 +1,8 @@
+name: ebook
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.11
+  - poetry
+  - conda-lock

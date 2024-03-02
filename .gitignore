@@ -1,0 +1,19 @@
+# book
+*.pdf
+*.epub
+*.txt
+*.docx
+*.db
+!requirements.txt
+
+/.vscode
+/output
+
+# config
+settings.cfg
+.env
+test.py
+
+__pycache__
+
+translation.yaml

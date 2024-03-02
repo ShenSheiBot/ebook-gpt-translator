@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "ebook-gpt-translator"
+version = "0.1.0"
+description = ""
+authors = ["ShenSheiBot <shensheibot@proton.me>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pdfminer = "^20191125"
+pdfminer-six = "^20231228"
+openai = "^1.12.0"
+tqdm = "^4.66.2"
+ebooklib = "^0.18"
+bs4 = "^0.0.2"
+python-docx = "^1.1.0"
+mobi = "^0.3.3"
+chardet = "^5.2.0"
+pandas = "^2.2.1"
+lxml = "^5.1.0"
+openpyxl = "^3.1.2"
+google-generativeai = "^0.3.2"
+fastapi-poe = "^0.0.34"
+spacy = "^3.7.4"
+pyzipper = "^0.3.6"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
