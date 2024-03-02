@@ -43,5 +43,9 @@ jobs:
     - name: Run docxloader.py script
       run: |
         python monitor.py output/${{ vars.CN_TITLE }} ${{ vars.CN_TITLE }} ${{ secrets.S3_ACCESS_KEY }} ${{ secrets.S3_SECRET_KEY }} ${{ secrets.S3_ENDPOINT }} ${{ secrets.S3_BUCKET_NAME }} & 
-        python docxloader.py
+        if [ "${{ vars.DRYRUN }}" = "True" ]; then
+          python docxloader.py --dryrun
+        else
+          python docxloader.py
+        fi
         python monitor.py output/${{ vars.CN_TITLE }} ${{ vars.CN_TITLE }} ${{ secrets.S3_ACCESS_KEY }} ${{ secrets.S3_SECRET_KEY }} ${{ secrets.S3_ENDPOINT }} ${{ secrets.S3_BUCKET_NAME }} --final
