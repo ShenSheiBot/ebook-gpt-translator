@@ -55,9 +55,9 @@ TRANSLATION_TITLE_RETRY_COUNT=[Retry Count for Batch Translation of EPUB Titles]
 
 
 ```bash
-python docxloader.py  # For DOCX files
+poetry run python docxloader.py  # For DOCX files
 # or
-python epubloader.py  # For EPUB files
+poetry run python epubloader.py  # For EPUB files
 ```
 
 The translation process can be paused and resumed. If interrupted, simply rerun the command to continue. Upon completion, the translated book will be available in both Chinese and bilingual (English + Chinese) formats in the `output/[Chinese Book Name]/` directory.
