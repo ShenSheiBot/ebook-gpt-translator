@@ -1,4 +1,4 @@
-name: Python EpubLoader Workflow
+name: Python DocxLoader Workflow
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
         poetry config virtualenvs.create false
         poetry install --no-root
 
-    - name: Copy input.epub and config.yaml
+    - name: Copy input.docx and config.yaml
       run: |
         python download.py output/${{ vars.CN_TITLE }} ${{ secrets.S3_ACCESS_KEY }} ${{ secrets.S3_SECRET_KEY }} ${{ secrets.S3_ENDPOINT }} ${{ secrets.S3_BUCKET_NAME }} & 
         sed -i 's/POE-API-KEY/'"${{ secrets.POE_API_KEY }}"'/g' translation.yaml.example
@@ -40,7 +40,7 @@ jobs:
         sed -i 's/TRANSLATION-TITLE-RETRY-COUNT/'"${{ vars.TRANSLATION_TITLE_RETRY_COUNT }}"'/g' .env.example
         mv .env.example .env
 
-    - name: Run epubloader.py script
+    - name: Run docxloader.py script
       run: |
         python monitor.py output/ ${{ secrets.S3_ACCESS_KEY }} ${{ secrets.S3_SECRET_KEY }} ${{ secrets.S3_ENDPOINT }} ${{ secrets.S3_BUCKET_NAME }} & 
-        python epubloader.py
+        python docxloader.py
