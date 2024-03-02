@@ -11,7 +11,7 @@ import yaml
 import time
 from translate import translate, validate, SqlWrapper
 from utils import load_config, update_content, remove_leading_numbers, get_leading_numbers
-from utils import split_string_by_length, txt_to_html, replace_section_titles, zip_folderPyzipper
+from utils import split_string_by_length, txt_to_html, replace_section_titles
 
 
 warnings.filterwarnings('ignore', category=XMLParsedAsHTMLWarning)
@@ -227,8 +227,6 @@ def main():
     
     epub.write_epub(f"output/{config['CN_TITLE']}/{config['CN_TITLE']}_cnen.epub", modified_book)
     epub.write_epub(f"output/{config['CN_TITLE']}/{config['CN_TITLE']}_cn.epub", cn_book)
-
-    zip_folderPyzipper(f"output/{config['CN_TITLE']}/", f"output/{config['CN_TITLE']}/{config['CN_TITLE']}.zip")
 
 
 if __name__ == "__main__":

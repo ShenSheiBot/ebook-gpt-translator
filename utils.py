@@ -6,9 +6,7 @@ from bs4 import BeautifulSoup
 from loguru import logger
 from copy import deepcopy
 from ebooklib import epub
-import pyzipper
 import sys
-import zipfile
 import json
 from lxml import etree
 
@@ -391,45 +389,6 @@ def find_matching_p_to_titles(soup, jp_titles, fast=False):
     return matching_ps, matching_titles
 
 
-def zip_folderPyzipper(folder_path, output_path):
-    """Zip the contents of an entire folder (with that folder included
-    in the archive). Empty subfolders will be included in the archive
-    as well.
-    """
-    # Retrieve the paths of the folder contents.
-    contents = os.walk(folder_path)
-    try:
-        zip_file = pyzipper.AESZipFile(
-            output_path,
-            "w",
-            compression=pyzipper.ZIP_DEFLATED,
-            encryption=pyzipper.WZ_AES,
-        )
-        zip_file.pwd = b"114514"
-        for root, _, files in contents:
-            relative_root = os.path.basename(root)
-            for file_name in files:
-                if "names_updated.json" in files and file_name == "names.json":
-                    continue
-                if not file_name.endswith(".epub") and not file_name.endswith("json"):
-                    continue
-                absolute_path = os.path.join(root, file_name)
-                print("Adding '%s' to archive." % absolute_path)
-                zip_file.write(absolute_path, relative_root + os.sep + file_name)
-            zip_file.write(
-                os.getcwd() + os.sep + "ad.jpg", relative_root + os.sep + "ad.jpg"
-            )
-        print("'%s' created successfully." % output_path)
-    except IOError as message:
-        print(message)
-        sys.exit(1)
-    except zipfile.BadZipfile as message:
-        print(message)
-        sys.exit(1)
-    finally:
-        zip_file.close()
-
-
 def get_consecutive_name_entities(entities, score_threshold=0.9):
     # Initialize variables
     consecutive_entities = []
@@ -576,42 +535,6 @@ def find_first_non_consecutive_substring(s, string_set):
 
 def flatten(xss):
     return [x for xs in xss for x in xs]
-
-
-def extract_ruby_from_epub(epub_path):
-    # Define the namespaces used in the XHTML files
-    namespaces = {
-        "epub": "http://www.idpf.org/2007/ops",
-        "html": "http://www.w3.org/1999/xhtml",
-    }
-
-    # Unzip the ePub file into a temporary directory
-    with zipfile.ZipFile(epub_path, "r") as epub_zip:
-        epub_zip.extractall("temp_epub")
-
-    ruby_texts = {}
-
-    # Walk through the temporary directory
-    for root, _, files in os.walk("temp_epub"):
-        for file in files:
-            if file.endswith(".xhtml"):
-                # Parse the XHTML file
-                tree = etree.parse(os.path.join(root, file))
-
-                # Find all the <ruby> elements and extract the text
-                for ruby in tree.xpath("//html:ruby", namespaces=namespaces):
-                    rb = ruby.xpath(".//html:rb", namespaces=namespaces)
-                    rt = ruby.xpath(".//html:rt", namespaces=namespaces)
-
-                    # Sometimes <rb> or <rt> might be missing, so check if they exist before trying to access text
-                    rb_text = rb[0].text if rb else ""
-                    rt_text = rt[0].text if rt else ""
-
-                    ruby_texts[rt_text] = rb_text
-
-    # Clean up the temporary directory
-    os.system("rm -rf temp_epub")
-    return ruby_texts
 
 
 def remove_comments(string):

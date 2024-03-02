@@ -4,7 +4,7 @@ This guide provides a step-by-step process for setting up the eBook Translator f
 
 ## Prerequisites
 - poetry: Install using `pip install poetry`.
-- Python 3.11
+- Python 3
 
 ## Repository Clone and Dependency Installation
 
@@ -14,6 +14,7 @@ Clone the repository and install the necessary dependencies:
 # It is recommended to create a new virtual environment before installing the dependencies.
 git clone https://github.com/ShenSheiBot/ebook-gpt-translator.git
 cd ebook-gpt-translator
+poetry env use python3.11
 poetry install --no-root
 ```
 
