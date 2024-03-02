@@ -9,7 +9,7 @@ Github actions can be used to automate the translation process if your book is s
 1. Fork this repository.
 2. Go to the `Settings` tab of your forked repository.
 3. Go to the `Secrets and variables - Actions` tab.
-4. (Optional) If you don't have a S3 bucket, you can get free 10GB storage at [Cloudflare](https://developers.cloudflare.com/r2/). Go to R2 - Manage R2 API Tokens - Create API Token. Take a note of the access key, secret key, and endpoint.
+4. (Optional) If you don't have a S3 bucket, you can get free 10GB storage at [Cloudflare](https://developers.cloudflare.com/r2/). Go to R2 - Manage R2 API Tokens - Create API Token. Allow read and write. Take a note of the access key, secret key, and endpoint.
 5. Add the following secrets:
    - `GOOGLE_API_KEY`: Your [Gemini API keys](https://aistudio.google.com/app/u/0/apikey?pli=1).
    - `POE_API_KEY`: (Optional) Your [Poe API keys](https://poe.com/api_key).
