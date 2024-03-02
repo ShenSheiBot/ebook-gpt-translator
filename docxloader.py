@@ -171,7 +171,8 @@ def translate_doc(docx_filename, output_filename, args):
                 continue
             else:
                 translated_text = translate(text_to_translate, args.dryrun)
-                cache[text_to_translate] = translated_text
+                if not args.dryrun:
+                    cache[text_to_translate] = translated_text
             add_text_to_paragraph(p, "\n" + translated_text)
     doc.save(output_filename)
 
@@ -180,6 +181,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dryrun", action="store_true")
     args = parser.parse_args()
+    
+    if args.dryrun:
+        logger.warning("Dry run mode enabled. No translation will be performed.")
     
     logger.add(f"output/{config['CN_TITLE']}/info.log", colorize=True, level="DEBUG")
     # Replace 'input.docx' with the path to your document and specify the output filename
