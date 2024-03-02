@@ -28,6 +28,9 @@ def main():
     parser.add_argument("--dryrun", action="store_true")
     parser.add_argument("--polish", action="store_true")
     args = parser.parse_args()
+    
+    if args.dryrun:
+        logger.warning("Dry run mode enabled. No translation will be performed.")
 
     # Open the EPUB file
     book = epub.read_epub(f"output/{config['CN_TITLE']}/input.epub", {"ignore_ncx": False})
@@ -83,7 +86,8 @@ def main():
                         cn_text = title_buffer[jp_text]
                     else:
                         cn_text = translate(jp_text, mode="title_translation", dryrun=args.dryrun)
-                        title_buffer[jp_text] = cn_text
+                        if not args.dryrun:
+                            title_buffer[jp_text] = cn_text
                     ### Translation finished
                     
                     ### Match translated title to the corresponding indices
