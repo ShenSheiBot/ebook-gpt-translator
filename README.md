@@ -58,7 +58,7 @@ python docxloader.py  # For DOCX files
 python epubloader.py  # For EPUB files
 ```
 
-The translation process can be paused and resumed. If interrupted, simply rerun the command to continue. Upon completion, the translated book will be available in both Chinese and bilingual (English + Chinese) formats in the output/[Chinese Book Name]/ directory.
+The translation process can be paused and resumed. If interrupted, simply rerun the command to continue. Upon completion, the translated book will be available in both Chinese and bilingual (English + Chinese) formats in the `output/[Chinese Book Name]/` directory.
 
 ## Support the Developer
 
