@@ -26,7 +26,8 @@ jobs:
     - name: Install dependencies
       run: |
         pip install poetry
-        poetry install
+        poetry install --no-root
+        poetry env use system
 
     - name: Copy input.epub and config.yaml
       run: |
@@ -44,4 +45,4 @@ jobs:
 
     - name: Run epubloader.py script
       run: |
-        poetry run python epubloader.py
+        python epubloader.py
