@@ -1,5 +1,7 @@
 # eBook GPT Translator Guide
 
+**[中文](./README_CN.md) | English**
+
 This guide provides a step-by-step process for setting up the eBook Translator for converting English ebooks into Chinese.
 
 ## [Recommended] Running as Github Action
