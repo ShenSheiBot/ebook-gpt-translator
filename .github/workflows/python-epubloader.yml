@@ -7,12 +7,7 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch: # This enables manual triggering of the workflow
-    inputs:
-      cn_title:
-        description: 'CN Title' # A description for this input
-        required: true         # Whether this input is required or optional
-        default: 'default_title' # A default value if one is not provided
+  workflow_dispatch:
 
 jobs:
   build-and-run:
