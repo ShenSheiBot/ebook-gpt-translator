@@ -9,7 +9,7 @@ cd gemini-ebook-translator
 poetry install
 ```
 
-## Translate a Chinese book
+## English -> Chinese Translation
 
 Move the book to the `output/[中文书名]/` directory, rename the book to `input.docx` or `input.epub`. Rename `.env.example` to `.env` and fill in the following values:
 
@@ -45,8 +45,8 @@ python docxloader.py  # or ...
 python epubloader.py
 ```
 
-The translation process is resumable. If the translation process is interrupted, run the command again. It will generate both a Chinese and an English version of the book in the `output/[中文书名]/` directory.
+The translation process is resumable. If the translation process is interrupted, run the command again. It will generate both a Chinese and an English + Chinese version of the book in the `output/[中文书名]/` directory.
 
 ## Support Me
 
-Please subscribe Zhihu literary critic [甚谁](https://www.zhihu.com/people/sakuraayane_justice)
+Please subscribe to the Zhihu literary critic [甚谁](https://www.zhihu.com/people/sakuraayane_justice)
