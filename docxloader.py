@@ -5,6 +5,7 @@ from utils import load_config
 from loguru import logger
 import string
 import re
+import argparse
 
 
 # Load the configuration
@@ -116,7 +117,7 @@ def is_page_number(paragraph):
     return False
 
 
-def translate_doc(docx_filename, output_filename):
+def translate_doc(docx_filename, output_filename, args):
     # Load the document
     doc = Document(docx_filename)
     
@@ -169,13 +170,17 @@ def translate_doc(docx_filename, output_filename):
             elif text_to_translate.isdigit():
                 continue
             else:
-                translated_text = translate(text_to_translate)
+                translated_text = translate(text_to_translate, args.dryrun)
                 cache[text_to_translate] = translated_text
             add_text_to_paragraph(p, "\n" + translated_text)
     doc.save(output_filename)
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dryrun", action="store_true")
+    args = parser.parse_args()
+    
     logger.add(f"output/{config['CN_TITLE']}/info.log", colorize=True, level="DEBUG")
     # Replace 'input.docx' with the path to your document and specify the output filename
-    translate_doc(f'output/{config["CN_TITLE"]}/input.docx', f'output/{config["CN_TITLE"]}/output.docx')
+    translate_doc(f'output/{config["CN_TITLE"]}/input.docx', f'output/{config["CN_TITLE"]}/output.docx', args)
