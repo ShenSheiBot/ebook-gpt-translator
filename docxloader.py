@@ -170,7 +170,7 @@ def translate_doc(docx_filename, output_filename, args):
             elif text_to_translate.isdigit():
                 continue
             else:
-                translated_text = translate(text_to_translate, args.dryrun)
+                translated_text = translate(text_to_translate, dryrun=args.dryrun)
                 if not args.dryrun:
                     cache[text_to_translate] = translated_text
             add_text_to_paragraph(p, "\n" + translated_text)
