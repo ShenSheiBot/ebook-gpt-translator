@@ -40,6 +40,7 @@ jobs:
         sed -i 's/JP-TITLE/'"$JP_TITLE"'/g' .env.example
         sed -i 's/TRANSLATION-TITLE_RETRY-COUNT/'"$TRANSLATION_TITLE_RETRY_COUNT"'/g' .env.example
         mv .env.example .env
+        cat .env
       # Make sure to replace 'path/to/your/input.epub' and 'path/to/your/config.yaml'
       # with the actual paths to the files in your repository or set up to receive them as inputs.
 
