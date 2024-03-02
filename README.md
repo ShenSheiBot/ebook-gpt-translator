@@ -20,7 +20,7 @@ Github actions can be used to automate the translation process if your book is s
    - `CN_TITLE`: The Chinese name of the book.
    - `JP_TITLE`: The English name of the book.
    - `TRANSLATION_TITLE_RETRY_COUNT`: The number of times to retry the batch translation of EPUB titles. 
-7. Create a local folder of the name `Chinese Book Name` and place the book file in the folder. Rename the file to `input.docx` or `input.epub`. 
+7. Create a local folder of the name `CN_TITLE` and place the book file in the folder. Rename the file to `input.docx` or `input.epub`. 
 8. Create a s3 bucket `book`. Upload the folder to Cloudflare S3 bucket `book`. (**ATTENTION**: Keep the folder structure, don't upload the file directly to the bucket)
 9. Go to the `Actions` tab and manually trigger the workflow.
 10. The translated book will be available in both Chinese and bilingual (English + Chinese) formats in your S3 bucket.
