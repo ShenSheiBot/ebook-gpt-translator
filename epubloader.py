@@ -88,6 +88,8 @@ def main():
                         cn_text = translate(jp_text, mode="title_translation", dryrun=args.dryrun)
                         if not args.dryrun:
                             title_buffer[jp_text] = cn_text
+                        else:
+                            cn_text = jp_text
                     ### Translation finished
                     
                     ### Match translated title to the corresponding indices
