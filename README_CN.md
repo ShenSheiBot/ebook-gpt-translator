@@ -19,7 +19,7 @@
 6. 转到 `Variables` 选项卡并添加下述 Repository variables:
    - `CN_TITLE`: 该电子书中文译名
    - `JP_TITLE`: 该电子书外文原名
-   - `TRANSLATION_TITLE_RETRY_COUNT`: 重试批量翻译 EPUB 标题的次数。 
+   - `TRANSLATION_TITLE_RETRY_COUNT`: 重试批量对齐翻译的次数，推荐5次（至少为3次）。 
 7. 创建一个名为 `CN_TITLE` 的本地文件夹，并将图书文件放入该文件夹。将文件重命名为`input.docx`或`input.epub`。 
 8. 创建一个 S3 存储桶 `book`。将文件夹上传到 Cloudflare S3 存储桶 `book`。 (**注意**: 保持文件夹结构，不要将文件直接上传到存储桶中)
 9. 转到 `Action` 选项卡，手动触发工作流程。

@@ -71,11 +71,6 @@ def align_translate(text_list, buffer, dryrun=False):
                     cn_text = buffer[text]
                 else:
                     cn_text = translate(text, mode="title_translation", dryrun=dryrun)
-                    if has_kana(cn_text):
-                        logger.warning(f"Kana detected in {text}.")
-                        retry_count -= 1
-                        continue
-                    buffer[text] = cn_text
                 ### Translation finished
                 
                 ### Match translated line to the corresponding indices
@@ -84,8 +79,27 @@ def align_translate(text_list, buffer, dryrun=False):
                 if len(cn_block_list) == 0:
                     continue
                 if get_leading_numbers(cn_block_list[0]) == start_idx and \
-                    get_leading_numbers(cn_block_list[-1]) == end_idx and \
-                        len(cn_block_list) == len(block_list):
+                get_leading_numbers(cn_block_list[-1]) == end_idx:
+                    if len(cn_block_list) != len(block_list):
+                        # Insert missing lines
+                        cn_map = {}
+                        map = {}
+                        for line in block_list:
+                            i = get_leading_numbers(line)
+                            map[i] = line
+                        for line in cn_block_list:
+                            i = get_leading_numbers(line)
+                            cn_map[i] = line
+                        for i in range(start_idx, end_idx + 1):
+                            if i not in cn_map:
+                                if i + 1 in cn_map:
+                                    cn_block_list.append(map[i + 1])
+                                elif i - 1 in cn_map:
+                                    cn_block_list.insert(0, map[i - 1])
+                                else:
+                                    cn_block_list.append(map[i])
+                        block_list = [map[i] for i in range(start_idx, end_idx + 1)]
+                        cn_block_list = [cn_map[i] for i in range(start_idx, end_idx + 1)]
                     break
                 else:
                     retry_count -= 1
@@ -96,6 +110,8 @@ def align_translate(text_list, buffer, dryrun=False):
                 logger.info(f"Falling back to no translation")
                 cn_block_list = block_list
                 flag = False
+            else:
+                buffer[text] = cn_text
                 
             for cn_line, line in zip(cn_block_list, block_list):
                 line = remove_leading_numbers(line)
