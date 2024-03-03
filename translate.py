@@ -3,7 +3,7 @@ from loguru import logger
 import re
 import yaml
 import sqlite3
-from utils import split_string_by_length, get_leading_numbers, remove_leading_numbers, load_config
+from utils import split_string_by_length, get_leading_numbers, remove_leading_numbers, load_config, has_kana
 
 with open("translation.yaml", "r") as f:
     translation_config = yaml.load(f, Loader=yaml.FullLoader)
@@ -13,7 +13,10 @@ logger.add(f"output/{config['CN_TITLE']}/info.log", colorize=True, level="DEBUG"
 
 
 def generate_prompt(jp_text, mode="translation"):
-    return "将下面的英文文本翻译为中文：\n" + jp_text
+    post_prompt = ""
+    if len(jp_text) > 500:
+        post_prompt = "\n\n请用中文回答"
+    return "将下面的英文文本翻译为中文：\n\n" + jp_text + post_prompt
 
 
 def validate(jp_text, cn_text):
@@ -34,13 +37,20 @@ def align_translate(text_list, buffer, dryrun=False):
     # Translate a aligned block of text
     # Concatenate the text list
     output = ''
-    special_title = {}
-    for i, text in enumerate(text_list):
+    special_line = {}
+    lines = set()
+    i = 0
+    for text in text_list:
         text_updated = text.replace('\n', '')
-        if text_updated != text:
-            special_title[text_updated] = text
-        output += str(i) + " " + text_updated + "\n"
-    blocks = split_string_by_length(output, 800)
+        if text_updated in lines:
+            continue  # Skip duplicate titles
+        else:
+            if text_updated != text:
+                special_line[text_updated] = text
+            lines.add(text_updated)
+            output += str(i) + " " + text_updated + "\n"
+            i += 1
+    blocks = split_string_by_length(output, 600)
         
     # Traverse the aggregated chapter titles
     for text in blocks:
@@ -61,10 +71,14 @@ def align_translate(text_list, buffer, dryrun=False):
                     cn_text = buffer[text]
                 else:
                     cn_text = translate(text, mode="title_translation", dryrun=dryrun)
+                    if has_kana(cn_text):
+                        logger.warning(f"Kana detected in {text}.")
+                        retry_count -= 1
+                        continue
                     buffer[text] = cn_text
                 ### Translation finished
                 
-                ### Match translated title to the corresponding indices
+                ### Match translated line to the corresponding indices
                 cn_block_list = cn_text.strip().split('\n')
                 cn_block_list = [line for line in cn_block_list if get_leading_numbers(line) is not None]
                 if len(cn_block_list) == 0:
@@ -76,16 +90,19 @@ def align_translate(text_list, buffer, dryrun=False):
                 else:
                     retry_count -= 1
             
+            flag = True
             if len(cn_block_list) != len(block_list):
-                logger.error(f"Failed to translate {text} after {config['TRANSLATION_TITLE_RETRY_COUNT']} retries.")
+                logger.critical(f"Failed to translate {text} after {config['TRANSLATION_TITLE_RETRY_COUNT']} retries.")
                 logger.info(f"Falling back to no translation")
                 cn_block_list = block_list
+                flag = False
                 
             for cn_line, line in zip(cn_block_list, block_list):
                 line = remove_leading_numbers(line)
-                if line in special_title:
-                    line = special_title[line]
-                buffer[line] = remove_leading_numbers(cn_line)
+                if line in special_line:
+                    line = special_line[line]
+                if flag:
+                    buffer[line] = remove_leading_numbers(cn_line)
 
 
 def translate(jp_text, mode="translation", dryrun=False):
