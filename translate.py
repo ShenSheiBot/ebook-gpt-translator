@@ -3,9 +3,13 @@ from loguru import logger
 import re
 import yaml
 import sqlite3
+from utils import split_string_by_length, get_leading_numbers, remove_leading_numbers, load_config
 
 with open("translation.yaml", "r") as f:
     translation_config = yaml.load(f, Loader=yaml.FullLoader)
+
+config = load_config()
+logger.add(f"output/{config['CN_TITLE']}/info.log", colorize=True, level="DEBUG")
 
 
 def generate_prompt(jp_text, mode="translation"):
@@ -24,6 +28,64 @@ def validate(jp_text, cn_text):
         return False
     else:
         return True
+    
+    
+def align_translate(text_list, buffer, dryrun=False):
+    # Translate a aligned block of text
+    # Concatenate the text list
+    output = ''
+    special_title = {}
+    for i, text in enumerate(text_list):
+        text_updated = text.replace('\n', '')
+        if text_updated != text:
+            special_title[text_updated] = text
+        output += str(i) + " " + text_updated + "\n"
+    blocks = split_string_by_length(output, 800)
+        
+    # Traverse the aggregated chapter titles
+    for text in blocks:
+        block_list = text.strip().split('\n')
+        
+        start_idx = get_leading_numbers(block_list[0])
+        end_idx = get_leading_numbers(block_list[-1])
+        
+        if not all([remove_leading_numbers(line) in buffer for line in block_list]):
+            cn_block_list = []
+            retry_count = int(config['TRANSLATION_TITLE_RETRY_COUNT']) + 1
+            
+            while len(cn_block_list) != len(block_list) and retry_count > 0:
+                ### Start translation
+                if dryrun:
+                    cn_text = text
+                elif text in buffer:
+                    cn_text = buffer[text]
+                else:
+                    cn_text = translate(text, mode="title_translation", dryrun=dryrun)
+                    buffer[text] = cn_text
+                ### Translation finished
+                
+                ### Match translated title to the corresponding indices
+                cn_block_list = cn_text.strip().split('\n')
+                cn_block_list = [line for line in cn_block_list if get_leading_numbers(line) is not None]
+                if len(cn_block_list) == 0:
+                    continue
+                if get_leading_numbers(cn_block_list[0]) == start_idx and \
+                    get_leading_numbers(cn_block_list[-1]) == end_idx and \
+                        len(cn_block_list) == len(block_list):
+                    break
+                else:
+                    retry_count -= 1
+            
+            if len(cn_block_list) != len(block_list):
+                logger.error(f"Failed to translate {text} after {config['TRANSLATION_TITLE_RETRY_COUNT']} retries.")
+                logger.info(f"Falling back to no translation")
+                cn_block_list = block_list
+                
+            for cn_line, line in zip(cn_block_list, block_list):
+                line = remove_leading_numbers(line)
+                if line in special_title:
+                    line = special_title[line]
+                buffer[line] = remove_leading_numbers(cn_line)
 
 
 def translate(jp_text, mode="translation", dryrun=False):

@@ -9,9 +9,8 @@ import re
 import warnings
 import yaml
 import time
-from translate import translate, validate, SqlWrapper
-from utils import load_config, update_content, remove_leading_numbers, get_leading_numbers
-from utils import split_string_by_length, txt_to_html, replace_section_titles
+from translate import translate, align_translate, validate, SqlWrapper
+from utils import load_config, update_content, txt_to_html, replace_section_titles
 
 
 warnings.filterwarnings('ignore', category=XMLParsedAsHTMLWarning)
@@ -51,66 +50,13 @@ def main():
         content = ncx.content.decode("utf-8")
         soup = BeautifulSoup(content, "html5lib")
         navpoints = soup.find_all("navpoint")
-        output = ""
         jp_titles = []
-        for i, navpoint in enumerate(navpoints):
+        for navpoint in navpoints:
             name = navpoint.find('text').get_text(strip=True)
-            output += str(i) + " " + name + "\n"
             jp_titles.append(name)
-        jp_titles_parts = split_string_by_length(output, 800)
         
         # Traverse the aggregated chapter titles
-        for jp_text in jp_titles_parts:
-            jp_titles_ = jp_text.strip().split('\n')
-            new_jp_titles = []
-            # Concatenate title to the previous one if it's a continuation
-            for jp_title in jp_titles_:
-                if jp_title[0].isdigit():
-                    new_jp_titles.append(jp_title)
-                else:
-                    new_jp_titles[-1] += jp_title
-            jp_titles_ = new_jp_titles
-            
-            start_idx = get_leading_numbers(jp_titles_[0])
-            end_idx = get_leading_numbers(jp_titles_[-1])
-            
-            if not all([remove_leading_numbers(title) in title_buffer for title in jp_titles_]):
-                cn_titles_ = []
-                title_retry_count = int(config['TRANSLATION_TITLE_RETRY_COUNT']) + 1
-                
-                while len(cn_titles_) != len(jp_titles_) and title_retry_count > 0:
-                    ### Start translation
-                    if args.polish:
-                        cn_text = jp_text
-                    elif jp_text in title_buffer:
-                        cn_text = title_buffer[jp_text]
-                    else:
-                        cn_text = translate(jp_text, mode="title_translation", dryrun=args.dryrun)
-                        if not args.dryrun:
-                            title_buffer[jp_text] = cn_text
-                        else:
-                            cn_text = jp_text
-                    ### Translation finished
-                    
-                    ### Match translated title to the corresponding indices
-                    cn_titles_ = cn_text.strip().split('\n')
-                    cn_titles_ = [title for title in cn_titles_ if get_leading_numbers(title) is not None]
-                    if len(cn_titles_) == 0:
-                        continue
-                    if get_leading_numbers(cn_titles_[0]) == start_idx and \
-                        get_leading_numbers(cn_titles_[-1]) == end_idx and \
-                            len(cn_titles_) == len(jp_titles_):
-                        break
-                    else:
-                        title_retry_count -= 1
-                
-                if len(cn_titles_) != len(jp_titles_):
-                    raise ValueError("Title translation failed.")
-                    
-                for cn_title, jp_title in zip(cn_titles_, jp_titles_):
-                    cn_title = jp_title
-                    title_buffer[remove_leading_numbers(jp_title)] = remove_leading_numbers(cn_title)
-
+        align_translate(jp_titles, title_buffer, args.dryrun)
         replace_section_titles(cn_book.toc, title_buffer)
         replace_section_titles(modified_book.toc, title_buffer, cnjp=True)
         
