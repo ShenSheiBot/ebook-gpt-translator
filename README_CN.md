@@ -1,6 +1,9 @@
 # eBook GPT Translator 使用手册
 
-本指南将逐步介绍如何设置eBook GPT Translator，将英文电子书转换成中文。
+本指南将逐步介绍如何设置eBook GPT Translator，将外语电子书转换成中文。
+
+目前支持格式：EPUB、DOCX、SRT（字幕）。
+PDF格式暂不支持，推荐由Adobe Acrobat或类似工具转换成EPUB或DOCX格式后翻译。
 
 ## [推荐] 以 Github Action 运行
 
@@ -20,7 +23,8 @@
    - `CN_TITLE`: 该电子书中文译名
    - `JP_TITLE`: 该电子书外文原名
    - `TRANSLATION_TITLE_RETRY_COUNT`: 重试批量对齐翻译的次数，推荐5次（至少为3次）。 
-7. 创建一个名为 `CN_TITLE` 的本地文件夹，并将图书文件放入该文件夹。将文件重命名为`input.docx`或`input.epub`。 
+   - `DRYRUN`: 如果设置为 `True`，则翻译过程将模拟进行，所有内容会被翻译为“待翻译”。如果您翻译了一半，不想翻译书籍的其余部分，这也是一个有用的选项。
+7. 创建一个名为 `CN_TITLE` 的本地文件夹，并将图书文件放入该文件夹。将文件重命名为`input.docx`，`input.epub`或`input.srt`。 
 8. 创建一个 S3 存储桶 `book`。将文件夹上传到 Cloudflare S3 存储桶 `book`。 (**注意**: 保持文件夹结构，不要将文件直接上传到存储桶中)
 9. 转到 `Action` 选项卡，手动触发工作流程。
 10. 翻译后的书籍将以中文和双语（英文+中文）两种格式出现在您的 S3 文件桶中。
@@ -47,14 +51,14 @@ poetry install --no-root
 
 ### 英译汉设置
 
-1. 将电子书文件放置于 `output/[Chinese Book Name]/` 目录下，并将其重命名为 `input.docx` 或 `input.epub`.
+1. 将电子书文件放置于 `output/[Chinese Book Name]/` 目录下，并将其重命名为 `input.docx`、`input.epub`或`input.srt`。
 
 2. 将文件 `.env.example` 重命名为 `.env` 并更新下述配置：
 
 ```bash
 CN_TITLE=[Chinese Book Name]
 JP_TITLE=[English Book Name]
-TRANSLATION_TITLE_RETRY_COUNT=[Retry Count for Batch Translation of EPUB Titles]
+TRANSLATION_TITLE_RETRY_COUNT=[Retry Count for Batch Translation of EPUB Titles or SRT Lines]
 ```
 
 3. 将文件 `translation.yaml.example` 重命名为 `translation.yaml` 并且填入你的 [Gemini API keys](https://aistudio.google.com/app/u/0/apikey?pli=1) 与 [Poe API keys](https://poe.com/api_key)。
@@ -76,18 +80,20 @@ TRANSLATION_TITLE_RETRY_COUNT=[Retry Count for Batch Translation of EPUB Titles]
 }
 ```
 
-4. 确保电子书文件已经位于 `output/[Chinese Book Name]/` 目录下，并且已经重命名为 `input.epub` 或 `input.docx`。
+1. 确保电子书文件已经位于 `output/[Chinese Book Name]/` 目录下，并且已经重命名。
 
-5. 执行以下命令以启动翻译过程：
+2. 执行以下命令以启动翻译过程：
 
 
 ```bash
 poetry run python docxloader.py  # For DOCX files
 # or
 poetry run python epubloader.py  # For EPUB files
+# or
+poetry run python srtloader.py  # For SRT files
 ```
 
-翻译过程可以暂停和恢复。如果中断，只需重新运行命令即可继续。翻译完成后，译本将以中文和双语（英文+中文）两种格式出现在  `output/[Chinese Book Name]/` 目录中。
+翻译过程可以暂停和恢复。如果中断，只需重新运行命令即可继续。翻译完成后，译本将以中文和双语两种格式出现在 `output/[Chinese Book Name]/` 目录中。
 
 ## 支持开发者
 
