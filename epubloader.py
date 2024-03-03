@@ -160,7 +160,8 @@ def main():
                                 cn_title = config['CN_TITLE']
                             else:
                                 cn_title = translate(jp_title, dryrun=args.dryrun)
-                                title_buffer[jp_title] = cn_title
+                                if not args.dryrun:
+                                    title_buffer[jp_title] = cn_title
                             ### Translation finished
                             
                         new_title = soup.new_tag(title.name, **{k: v for k, v in title.attrs.items()})
