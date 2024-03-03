@@ -51,7 +51,7 @@ poetry env use python3.11
 poetry install --no-root
 ```
 
-### English to Chinese Translation Setup
+### Translation Setup
 
 1. Place the book file in the `output/[Chinese Book Name]/` directory and rename it to `input.docx`, `input.epub` or `input.srt`
 
@@ -59,7 +59,7 @@ poetry install --no-root
 
 ```bash
 CN_TITLE=[Chinese Book Name]
-JP_TITLE=[English Book Name]
+JP_TITLE=[Original Book Name]
 TRANSLATION_TITLE_RETRY_COUNT=[Retry Count for Batch Translation of EPUB Titles or SRT Lines]
 ```
 

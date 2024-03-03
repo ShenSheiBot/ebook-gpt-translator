@@ -27,7 +27,7 @@ PDF格式暂不支持，推荐由Adobe Acrobat或类似工具转换成EPUB或DOC
 7. 创建一个名为 `CN_TITLE` 的本地文件夹，并将图书文件放入该文件夹。将文件重命名为`input.docx`，`input.epub`或`input.srt`。 
 8. 创建一个 S3 存储桶 `book`。将文件夹上传到 Cloudflare S3 存储桶 `book`。 (**注意**: 保持文件夹结构，不要将文件直接上传到存储桶中)
 9. 转到 `Action` 选项卡，手动触发工作流程。
-10. 翻译后的书籍将以中文和双语（英文+中文）两种格式出现在您的 S3 文件桶中。
+10. 翻译后的书籍将以中文和双语两种格式出现在您的 S3 文件桶中。
 
 
 
@@ -49,7 +49,7 @@ poetry env use python3.11
 poetry install --no-root
 ```
 
-### 英译汉设置
+### 翻译设置
 
 1. 将电子书文件放置于 `output/[Chinese Book Name]/` 目录下，并将其重命名为 `input.docx`、`input.epub`或`input.srt`。
 
