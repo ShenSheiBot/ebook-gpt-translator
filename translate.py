@@ -93,11 +93,11 @@ def align_translate(text_list, buffer, dryrun=False):
                         for i in range(start_idx, end_idx + 1):
                             if i not in cn_map:
                                 if i + 1 in cn_map:
-                                    cn_block_list.append(map[i + 1])
+                                    cn_map[i] = cn_map[i + 1]
                                 elif i - 1 in cn_map:
-                                    cn_block_list.insert(0, map[i - 1])
+                                    cn_map[i] = cn_map[i - 1]
                                 else:
-                                    cn_block_list.append(map[i])
+                                    cn_map[i] = map[i]
                         block_list = [map[i] for i in range(start_idx, end_idx + 1)]
                         cn_block_list = [cn_map[i] for i in range(start_idx, end_idx + 1)]
                     break
