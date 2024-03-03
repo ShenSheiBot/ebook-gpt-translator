@@ -1,4 +1,4 @@
-name: Python DocxLoader Workflow
+name: Python SrtLoader Workflow
 
 on:
   push:
