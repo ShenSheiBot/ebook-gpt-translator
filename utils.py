@@ -351,6 +351,8 @@ def update_content(item, new_book, title_buffer, updated_content):
     if isinstance(item, epub.EpubHtml):
         links = soup.find_all("link")
         for link in links:
+            if "href" not in link.attrs:
+                continue
             href = link.attrs["href"]
             if href.endswith("css"):
                 modified_item.add_link(href=href, rel="stylesheet", type="text/css")
