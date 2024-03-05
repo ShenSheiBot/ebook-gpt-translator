@@ -46,19 +46,25 @@ def main():
             title_buffer[config['JP_TITLE']] = config['CN_TITLE']
         
         ############ Translate the chapter titles ############
-        ncx = book.get_item_with_id("ncx")
-        content = ncx.content.decode("utf-8")
-        soup = BeautifulSoup(content, "html5lib")
-        navpoints = soup.find_all("navpoint")
-        jp_titles = []
-        for navpoint in navpoints:
-            name = navpoint.find('text').get_text(strip=True)
-            jp_titles.append(name)
+        ncx = None
+        for item in book.get_items():
+            if isinstance(item, epub.EpubNcx):
+                ncx = item
+                break
         
-        # Traverse the aggregated chapter titles
-        align_translate(jp_titles, title_buffer, args.dryrun)
-        replace_section_titles(cn_book.toc, title_buffer)
-        replace_section_titles(modified_book.toc, title_buffer, cnjp=True)
+        if ncx:
+            content = ncx.content.decode("utf-8")
+            soup = BeautifulSoup(content, "html5lib")
+            navpoints = soup.find_all("navpoint")
+            jp_titles = []
+            for navpoint in navpoints:
+                name = navpoint.find('text').get_text(strip=True)
+                jp_titles.append(name)
+            
+            # Traverse the aggregated chapter titles
+            align_translate(jp_titles, title_buffer, args.dryrun)
+            replace_section_titles(cn_book.toc, title_buffer)
+            replace_section_titles(modified_book.toc, title_buffer, cnjp=True)
         
         total_items = 0
         for item in tqdm(list(book.get_items())):
@@ -70,6 +76,8 @@ def main():
     
         ############ Translate the chapters and TOCs ############
         for item in list(book.get_items()):
+            if isinstance(item, epub.EpubNcx):
+                print(item.id)
             
             if isinstance(item, epub.EpubHtml) and not isinstance(item, epub.EpubNav) \
             and "TOC" not in item.id and "toc" not in item.id:
