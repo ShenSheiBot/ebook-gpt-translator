@@ -26,6 +26,7 @@ Github actions can be used to automate the translation process if your book is s
    - `JP_TITLE`: The Foreign name of the book.
    - `TRANSLATION_TITLE_RETRY_COUNT`: The number of times to retry the batch translation of multiple lines (SRT / Epub title). Recommended 5 times (at least 3 times). 
    - `DRYRUN`, if set to `True`, then the translation process will be simulated without actually translating the book. Also useful if you don't want to translate rest of the book.
+   - `PROMPT`: (Optional) default to "将下面的英文文本翻译为中文："
 7. Create a local folder of the name `CN_TITLE` and place the book file in the folder. Rename the file to `input.docx`, `input.epub` or `input.srt`.
 8. Create a s3 bucket `book`. Upload the folder to Cloudflare S3 bucket `book`. (**ATTENTION**: Keep the folder structure, don't upload the file directly to the bucket)
 9. Go to the `Actions` tab and manually trigger the workflow.

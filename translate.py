@@ -16,7 +16,9 @@ def generate_prompt(jp_text, mode="translation"):
     post_prompt = ""
     if len(jp_text) > 500:
         post_prompt = "\n\n请用中文回答"
-    return "将下面的英文文本翻译为中文：\n\n" + jp_text + post_prompt
+    if 'PROMPT' not in config or config['PROMPT'] == '':
+        config['PROMPT'] = "将下面的英文文本翻译为中文："
+    return config['PROMPT'] + "\n\n" + jp_text + post_prompt
 
 
 def validate(jp_text, cn_text):
