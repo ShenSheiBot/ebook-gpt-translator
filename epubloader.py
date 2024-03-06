@@ -10,7 +10,7 @@ import warnings
 import yaml
 import time
 from translate import translate, align_translate, validate, SqlWrapper
-from utils import load_config, update_content, txt_to_html, replace_section_titles
+from utils import load_config, update_content, get_filtered_tags, replace_section_titles
 
 
 warnings.filterwarnings('ignore', category=XMLParsedAsHTMLWarning)
@@ -76,9 +76,6 @@ def main():
     
         ############ Translate the chapters and TOCs ############
         for item in list(book.get_items()):
-            if isinstance(item, epub.EpubNcx):
-                print(item.id)
-            
             if isinstance(item, epub.EpubHtml) and not isinstance(item, epub.EpubNav) \
             and "TOC" not in item.id and "toc" not in item.id:
                 
@@ -100,9 +97,10 @@ def main():
                 for rt_tag in cn_soup.find_all("rt"):
                     rt_tag.decompose()
                 
-                titles_and_paragraphs = soup.find_all(['h1', 'h2', 'h3', 'p'])
-                cn_titles_and_paragraphs = cn_soup.find_all(['h1', 'h2', 'h3', 'p'])
+                titles_and_paragraphs = get_filtered_tags(soup)
+                cn_titles_and_paragraphs = get_filtered_tags(cn_soup)
                 
+                last_text = None
                 for title, cnonly in zip(titles_and_paragraphs, cn_titles_and_paragraphs):
                     if title.name in ['h1', 'h2', 'h3']:
                         jp_title = title.get_text().strip()
@@ -140,11 +138,15 @@ def main():
                             cn_text = translate(jp_text, dryrun=args.dryrun)
                             if not args.dryrun:
                                 buffer[jp_text] = cn_text
-                        cn_text = txt_to_html(cn_text)
-                        new_text = BeautifulSoup(cn_text, "html5lib").find()
-                        cnonly.insert_after(deepcopy(new_text))
+                        new_text = soup.new_tag(title.name, **{k: v for k, v in title.attrs.items()})
+                        new_text.string = cn_text
+                        if cnonly.parent:
+                            cnonly.insert_after(deepcopy(new_text))
+                        else:
+                            last_text.insert_after(deepcopy(new_text))
                         cnonly.decompose()
                         title.insert_after(new_text)
+                        last_text = new_text
 
                         for img in imgs:
                             cnonly.insert_before(BeautifulSoup(img, "html5lib"))

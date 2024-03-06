@@ -2,13 +2,11 @@ import random
 import re
 import os
 import ast
-from bs4 import BeautifulSoup
 from loguru import logger
 from copy import deepcopy
 from ebooklib import epub
-import sys
 import json
-from lxml import etree
+from bs4 import BeautifulSoup, Tag
 
 
 def load_config(filepath=".env"):
@@ -52,6 +50,20 @@ def txt_to_html(text, tag="p"):
         f"<{tag}>" + p.strip() + f"</{tag}>" for p in paragraphs if p.strip() != ""
     ]
     return "\n".join(html_paragraphs)
+
+
+def get_filtered_tags(soup):
+    def is_eligible_div(tag):
+        # A div is eligible if it does not contain any of the specified tags
+        return tag.name == 'div' and not tag.find_all(['h1', 'h2', 'h3', 'p'])
+
+    # Find all eligible elements, including divs
+    eligible_elements = soup.find_all(['h1', 'h2', 'h3', 'p']) + soup.find_all(is_eligible_div)
+    
+    # Sort elements by their position in the document
+    sorted_elements = sorted(eligible_elements, key=lambda x: x.parent.contents.index(x))
+
+    return sorted_elements
 
 
 def split_string_by_paragraphs(text):
