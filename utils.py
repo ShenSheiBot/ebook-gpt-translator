@@ -22,6 +22,8 @@ def load_config(filepath=".env"):
                 key = key.strip()
                 value = value.strip()
                 # Remove quotes if value is a string that's quoted
+                if len(value) < 1:
+                    continue
                 if (value[0] == value[-1]) and value.startswith(("'", '"')):
                     value = value[1:-1]
                 # Try to evaluate value as int or float
@@ -623,4 +625,5 @@ def remove_common_suffix(s1, s2):
 
 
 if __name__ == "__main__":
+    print(load_config())
     pass
