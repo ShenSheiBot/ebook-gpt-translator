@@ -57,7 +57,7 @@ def txt_to_html(text, tag="p"):
 def get_filtered_tags(soup):
     def is_eligible_div(tag):
         # A div is eligible if it does not contain any of the specified tags
-        return tag.name == 'div' and not tag.find_all(['h1', 'h2', 'h3', 'p'])
+        return tag.name == 'div' and not tag.find_all(['h1', 'h2', 'h3', 'p', 'div'])
 
     # Find all eligible elements, including divs
     eligible_elements = soup.find_all(['h1', 'h2', 'h3', 'p']) + soup.find_all(is_eligible_div)
