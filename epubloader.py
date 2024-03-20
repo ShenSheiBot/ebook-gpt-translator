@@ -18,6 +18,7 @@ warnings.filterwarnings('ignore', category=UserWarning)
 with open("translation.yaml", "r") as f:
     translation_config = yaml.load(f, Loader=yaml.FullLoader)
 webapp = None
+MAX_LENGTH = 4000
 
 
 def main():
@@ -132,12 +133,28 @@ def main():
                         imgs = img_pattern.findall(jp_text)
                         jp_text = img_pattern.sub('', jp_text)
                         
-                        if jp_text in buffer and validate(jp_text, buffer[jp_text]):
-                            cn_text = buffer[jp_text]
+                        def translate_helper(jp_text):
+                            ### Start translation
+                            if jp_text in buffer and validate(jp_text, buffer[jp_text]):
+                                cn_text = buffer[jp_text]
+                            else:
+                                cn_text = translate(jp_text, dryrun=args.dryrun)
+                                if not args.dryrun:
+                                    buffer[jp_text] = cn_text
+                            ### Translation finished
+                            return cn_text
+                        
+                        if len(jp_text) > MAX_LENGTH:
+                            # Split the title into smaller chunks by paragraphs
+                            jp_text_chunks = jp_text.split("\n\n")
+                            cn_text_chunks = []
+                            for i in range(len(jp_text_chunks)):
+                                if len(jp_text_chunks[i].strip()) > 0:
+                                    cn_text_chunks.append(translate_helper(jp_text_chunks[i]))
+                            cn_text = "\n\n".join(cn_text_chunks)
                         else:
-                            cn_text = translate(jp_text, dryrun=args.dryrun)
-                            if not args.dryrun:
-                                buffer[jp_text] = cn_text
+                            cn_text = translate_helper(jp_text)
+                        
                         new_text = soup.new_tag(title.name, **{k: v for k, v in title.attrs.items()})
                         new_text.string = cn_text
                         if cnonly.parent:

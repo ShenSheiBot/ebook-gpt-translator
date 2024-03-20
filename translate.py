@@ -27,7 +27,7 @@ def validate(jp_text, cn_text):
         return False
     if len(cn_text) == 0:
         return True
-    ratio = len(jp_text) / len(cn_text)
+    ratio = len(jp_text.strip()) / len(cn_text.strip())
     if ratio < 0.9 or ratio > 10:
         logger.warning(f"Validation failed: ratio of Chinese characters to English words: {ratio}")
         return False
