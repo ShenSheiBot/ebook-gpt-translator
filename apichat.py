@@ -109,15 +109,17 @@ class PoeAPIChatApp:
     def __init__(self, api_key, model_name):
         self.api_key = api_key
         self.model_name = model_name
+        self.messages = []
         
     def chat(self, message):
         return asyncio.run(self._async_chat(message))
-
+    
     async def _async_chat(self, message):
-        messages = [{"role": "user", "content": message}]
+        self.messages.append({"role": "user", "content": message})
         final_message = ""
         try:
-            async for partial in fp.get_bot_response(messages=messages, bot_name=self.model_name, api_key=self.api_key):
+            async for partial in fp.get_bot_response(messages=self.messages, bot_name=self.model_name, 
+                                                     api_key=self.api_key):
                 final_message += partial.text
         except Exception as e:
             raise APITranslationFailure(f"Poe API connection failed: {str(e)}")
