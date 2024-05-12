@@ -28,7 +28,7 @@ def validate(jp_text, cn_text):
     if len(cn_text) == 0:
         return True
     ratio = len(jp_text.strip()) / len(cn_text.strip())
-    if ratio < 0.9 or ratio > 10:
+    if ratio < 0.5 or ratio > 10:
         logger.warning(f"Validation failed: ratio of Chinese characters to English words: {ratio}")
         return False
     else:
@@ -129,6 +129,7 @@ def translate(jp_text, mode="translation", dryrun=False):
         return jp_text
            
     flag = True
+    cn_text = '翻译失败'
     
     if dryrun:
         return "待翻译……"
