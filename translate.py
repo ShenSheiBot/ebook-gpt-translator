@@ -3,7 +3,8 @@ from loguru import logger
 import re
 import yaml
 import sqlite3
-from utils import split_string_by_length, get_leading_numbers, remove_leading_numbers, load_config, has_kana
+import time
+from utils import split_string_by_length, get_leading_numbers, remove_leading_numbers, load_config, postprocess
 
 with open("translation.yaml", "r") as f:
     translation_config = yaml.load(f, Loader=yaml.FullLoader)
@@ -17,7 +18,7 @@ def generate_prompt(jp_text, mode="translation"):
     if len(jp_text) > 500:
         post_prompt = "\n\n请用中文回答"
     if 'PROMPT' not in config or config['PROMPT'] == '':
-        config['PROMPT'] = "将下面的英文文本翻译为中文："
+        config['PROMPT'] = "将下面的英文文本翻译为中文，如果无须翻译则返回原文，不要分析，只返回翻译内容："
     return config['PROMPT'] + "\n\n" + jp_text + post_prompt
 
 
@@ -74,6 +75,7 @@ def align_translate(text_list, buffer, dryrun=False):
                 else:
                     cn_text = translate(text, mode="title_translation", dryrun=dryrun)
                 ### Translation finished
+                cn_text = postprocess(cn_text)
                 
                 ### Match translated line to the corresponding indices
                 cn_block_list = cn_text.strip().split('\n')
@@ -124,8 +126,8 @@ def align_translate(text_list, buffer, dryrun=False):
 
 
 def translate(jp_text, mode="translation", dryrun=False):
-    # If single character, return directly
-    if len(jp_text.strip()) == 1:
+    # If number of english letters is less than 2, return directly
+    if len(re.findall(r'[a-zA-Z]', jp_text)) < 2:
         return jp_text
            
     flag = True
@@ -162,17 +164,25 @@ def translate(jp_text, mode="translation", dryrun=False):
             else:
                 raise ValueError("Invalid model name.")
             
+            backoff_time = 2  # Start with 2 seconds
+            max_backoff_time = 64  # Maximum backoff time
+            
             while flag and retry_count > 0:
                 try:
                     cn_text = api_app.chat(prompt)
                     if not validate(jp_text, cn_text):
-                        raise APITranslationFailure("Validation failed.")
+                        raise APITranslationFailure(f"Validation failed: {cn_text}")
                     flag = False
                 except APITranslationFailure as e:
+                    if 'quota' in str(e):
+                        retry_count += 1
                     logger.critical(f"API translation failed: {e}")
+                    time.sleep(backoff_time)
+                    logger.debug(f"Retrying in {backoff_time} seconds ...")
+                    backoff_time = min(backoff_time * 2, max_backoff_time)  # Exponential backoff
                     pass
                 retry_count -= 1
-                
+        
         if not flag:
             break
                 

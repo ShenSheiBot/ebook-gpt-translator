@@ -22,7 +22,20 @@ class APIChatApp:
     def __init__(self, api_key, model_name, temperature):
         self.api_key = api_key
         self.model_name = model_name
-        self.messages = [{"role": "system", "content": "API_PROMPT"}]  # Replace API_PROMPT with actual prompt if needed
+        self.messages = [
+            {
+                "role": "system", 
+                "content": "API_PROMPT"
+            }, 
+            {
+                "role": "user",
+                "content": "将下面的英文文本翻译为中文，如果无须翻译则返回原文。不要分析，只返回翻译内容：Example"
+            },
+            {
+                "role": "assistant",
+                "content": "例子" 
+            }
+        ]
         self.response = None
         self.temperature = temperature
 
@@ -47,8 +60,8 @@ class OpenAIChatApp(APIChatApp):
         self.messages = [
             {
                 "role": "system", 
-                "content": "你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。"
-            }, 
+                "content": "You are a helpful translation assistant."
+            },
             {
                 "role": "user", 
                 "content": message
@@ -99,7 +112,7 @@ class GoogleChatApp(APIChatApp):
             if 'block_reason' in response.prompt_feedback:
                 print(vars(response))
                 raise APITranslationFailure("Content generation blocked due to safety settings.")
-            self.messages = [{"role": "assistant", "content": response.text}]
+            self.messages += [{"role": "assistant", "content": response.text}]
             return response.text
         except Exception as e:
             raise APITranslationFailure(f"Google API connection failed: {str(e)}")

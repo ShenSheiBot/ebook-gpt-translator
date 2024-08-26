@@ -9,6 +9,14 @@ import json
 from bs4 import BeautifulSoup, Tag
 
 
+def postprocess(s):
+    # Remove parts before 翻译：
+    s = re.sub(r".*翻译：", "", s)
+    # Remove leading #
+    s = re.sub(r"^#*\s", "", s)
+    return s
+
+
 def load_config(filepath=".env"):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     filepath = os.path.join(script_dir, filepath)

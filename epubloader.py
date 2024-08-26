@@ -10,7 +10,7 @@ import warnings
 import yaml
 import time
 from translate import translate, align_translate, validate, SqlWrapper
-from utils import load_config, update_content, get_filtered_tags, replace_section_titles
+from utils import load_config, update_content, get_filtered_tags, replace_section_titles, postprocess
 
 
 warnings.filterwarnings('ignore', category=XMLParsedAsHTMLWarning)
@@ -105,7 +105,7 @@ def main():
                 for title, cnonly in zip(titles_and_paragraphs, cn_titles_and_paragraphs):
                     if title.name in ['h1', 'h2', 'h3']:
                         jp_title = title.get_text().strip()
-                        if jp_title in title_buffer:
+                        if jp_title in title_buffer and validate(jp_title, title_buffer[jp_title]):
                             cn_title = title_buffer[jp_title]
                         else:
                             ### Start translation
@@ -118,6 +118,7 @@ def main():
                                 if not args.dryrun:
                                     title_buffer[jp_title] = cn_title
                             ### Translation finished
+                        cn_title = postprocess(cn_title)
                             
                         new_title = soup.new_tag(title.name, **{k: v for k, v in title.attrs.items()})
                         new_title.string = title.get_text().replace(jp_title, cn_title)
@@ -142,6 +143,7 @@ def main():
                                 if not args.dryrun:
                                     buffer[jp_text] = cn_text
                             ### Translation finished
+                            cn_text = postprocess(cn_text)
                             return cn_text
                         
                         if len(jp_text) > MAX_LENGTH:

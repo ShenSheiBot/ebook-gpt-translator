@@ -138,8 +138,8 @@ def translate_doc(docx_filename, output_filename, args):
             final_paragraphs.add(i)
             continue
         elif ((last_char.isalnum() or last_char == ',') and
-              (paragraph.text.strip()[0].isalnum() and paragraph.text.strip()[0].islower())) \
-        and get_style(paragraph) == style:
+              (paragraph.text.strip()[0].isalnum())) \
+        and get_style(paragraph)[1] == style:
             # Continuation of previous paragraph
             # logger.error(f"Continuation")
             last_char = paragraph.text.strip()[-1]
