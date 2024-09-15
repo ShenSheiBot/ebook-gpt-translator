@@ -1,12 +1,12 @@
 {
     "Gemini-Pro-api": {
-        "name": "gemini-pro",
+        "name": "gemini-1.5-flash",
         "type": "api",
         "retry_count": 3,
         "key": "GOOGLE-API-KEY"
     },
     "Poe-api": {
-        "name": "Gemini-Pro",
+        "name": "Gemini-1.5-Flash",
         "type": "api",
         "retry_count": 1,
         "key": "POE-API-KEY"

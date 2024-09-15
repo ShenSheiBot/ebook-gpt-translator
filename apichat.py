@@ -10,7 +10,7 @@ import re
 import json
 
 
-last_chat_time = None
+SYSTEM_PROMPT = "你是一个翻译机器人。你总是提供外语与中文对照翻译，如果内容无需翻译，你会返回原文。你从不增加额外的分析，只返回翻译后的内容。你从来只回答中文。"
 
 
 class APITranslationFailure(Exception):
@@ -22,20 +22,13 @@ class APIChatApp:
     def __init__(self, api_key, model_name, temperature):
         self.api_key = api_key
         self.model_name = model_name
-        self.messages = [
+        self.INITIAL_MESSAGE = [
             {
                 "role": "system", 
-                "content": "API_PROMPT"
-            }, 
-            {
-                "role": "user",
-                "content": "将下面的英文文本翻译为中文，如果无须翻译则返回原文。不要分析，只返回翻译内容：Example"
-            },
-            {
-                "role": "assistant",
-                "content": "例子" 
+                "content": SYSTEM_PROMPT
             }
         ]
+        self.messages = self.INITIAL_MESSAGE
         self.response = None
         self.temperature = temperature
 
@@ -57,23 +50,13 @@ class OpenAIChatApp(APIChatApp):
         )
 
     def chat(self, message):
-        self.messages = [
-            {
-                "role": "system", 
-                "content": "You are a helpful translation assistant."
-            },
-            {
-                "role": "user", 
-                "content": message
-            }
-        ]
         try:
             response = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=self.messages,
                 temperature=self.temperature
             )
-            self.messages = [{"role": "assistant", "content": response.choices[0].message.content}]
+            self.messages.append([{"role": "assistant", "content": response.choices[0].message.content}])
             self.response = response
             return response.choices[0].message.content
         except openai.APIError as e:
@@ -81,39 +64,45 @@ class OpenAIChatApp(APIChatApp):
 
 
 class GoogleChatApp(APIChatApp):
-    def __init__(self, api_key, model_name, temperature=0.2):
+    def __init__(self, api_key, model_name, temperature=1.0):
         super().__init__(api_key, model_name, temperature)
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel(self.model_name)
+        self.model = genai.GenerativeModel(self.model_name, system_instruction=SYSTEM_PROMPT)
+        self.SAFETY_SETTINGS = [
+            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+        ]
 
-    def chat(self, message):
-        global last_chat_time
-        
-        if last_chat_time is not None:
-            elapsed_time = time.time() - last_chat_time
-            if elapsed_time < 1:
-                time_to_wait = 1 - elapsed_time
-                time.sleep(time_to_wait)
-        last_chat_time = time.time()
-            
-        self.messages.append({"role": "user", "content": message})
-        prompt = "".join([m["content"] for m in self.messages])
+    def chat(self, message, image=None):
+        if image:
+            self.messages = []
+
+        # Update all content to parts
+        new_messages = []
+        for i, m in enumerate(self.messages):
+            if m["role"] == "assistant":
+                m["role"] = "model"
+            elif m["role"] == "system":
+                continue
+            if "content" in m:
+                new_messages.append({"role": m["role"], "parts": [m["content"]]})
+            else:
+                new_messages.append({"role": m["role"], "parts": m["parts"]})
+        self.messages = new_messages
+        self.messages.append({"role": "user", "parts": [message]})
         try:
             response = self.model.generate_content(
-                prompt,
-                safety_settings=[
-                    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-                    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-                    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-                    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-                ],
+                self.messages,
+                safety_settings=self.SAFETY_SETTINGS,
                 generation_config={"temperature": self.temperature, "max_output_tokens": 8192}
             )
             if 'block_reason' in response.prompt_feedback:
                 print(vars(response))
                 raise APITranslationFailure("Content generation blocked due to safety settings.")
-            self.messages += [{"role": "assistant", "content": response.text}]
-            return response.text
+            self.messages += [{"role": "assistant", "parts": response.parts}]
+            return response.text if hasattr(response, "text") else response.parts
         except Exception as e:
             raise APITranslationFailure(f"Google API connection failed: {str(e)}")
 
@@ -139,62 +128,25 @@ class PoeAPIChatApp:
         return final_message
 
 
-class BaichuanChatApp:
-    def __init__(self, api_key, model_name):
-        self.api_key = api_key
-        self.model_name = model_name
-        self.url = 'https://api.baichuan-ai.com/v1/chat/completions'
-        self.headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {self.api_key}'
-        }
-    
-    def chat(self, message, temperature=0.3, top_p=0.85, max_tokens=2048):
-        payload = {
-            "model": self.model_name,
-            "messages": [{
-                "role": "user",
-                "content": message
-            }],
-            "temperature": temperature,
-            "top_p": top_p,
-            "max_tokens": max_tokens,
-            "with_search_enhance": False,
-            "stream": True
-        }
-
-        response = requests.post(self.url, headers=self.headers, data=json.dumps(payload))
-        if response.status_code == 200:
-            raw_stream_response = response.text
-            matches = ''.join(re.findall(r'\"content\":\"(.*?)\"', raw_stream_response, re.DOTALL))
-            finish_reason_matches = re.findall(r'\"finish_reason\":\"(.*?)\"', raw_stream_response)
-            if not finish_reason_matches or "stop" not in finish_reason_matches:
-                err_msg = "\n".join(response.text.split('\n')[-5:])
-                raise APITranslationFailure(f"Baichuan API translation terminated: {err_msg}")
-            else:
-                return matches.replace('\\n', '\n')
-        else:
-            raise APITranslationFailure(f"Baichuan API connection failed: {response.text}")
-
-
 if __name__ == "__main__":
     # Example usage:
     with open("translation.yaml", "r") as f:
         translation_config = yaml.load(f, Loader=yaml.FullLoader)
 
-    google_chat = GoogleChatApp(
-        api_key=translation_config['Gemini-Pro-api']['key'], 
-        model_name='gemini-pro'
-    )
+    image_prompt = "Recognize text from the book. Skip header and page number."
+    
+    # poe_chat = PoeAPIChatApp(
+    #     api_key=translation_config['Poe-api']['key'], 
+    #     model_name='Gemini-1.5-Pro'
+    # )
 
-    prompt = f"""将下面的日文文本翻译成中文：
-　微かな震動に揺れる大きな馬車の中、初めて乗る馬車と言う乗り物に感想を抱く事も無く頭を抱える。
-　光永君は勇者祭への参加を了承したらしく、国賓として王宮へ向かうと楠さんと柚木さんに軽く挨拶をしてから、物凄く豪華な馬車に乗っていった。俺もそっちに連れて行って欲しかった。
-「……あの、カイトさん？　大丈夫ですか？　御気分が優れないようなら、休憩等を挟みますが……」
-「イエ、ダイジョウブデス」
-「お嬢様、ミヤマ様はきっとまだ混乱されているのでしょう」
-　このメイドはいけしゃあしゃあと……原因分かってるくせに、当り前の様にとぼけてやがる。"""
-    # print(openai_chat.chat(prompt))
-    print(google_chat.chat(prompt))
-    # print(poe_chat.chat(prompt))
-    # print(baichuan_chat.chat(prompt))
+    # image_prompt += "\n\n https://i.ibb.co/hgt8pkg/example.png"
+    # print(poe_chat.chat(image_prompt))
+
+    image_prompt = "https://resize.cdn.otakumode.com/ex/800.1000/shop/product/036fb4d5406746d5b3ea3a0eb9f7691c.jpg"
+
+    poe_chat = PoeAPIChatApp(
+        api_key=translation_config['Poe-api']['key'], 
+        model_name='ImgDown'
+    )
+    poe_chat.chat(image_prompt)

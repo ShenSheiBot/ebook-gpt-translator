@@ -14,6 +14,7 @@ def postprocess(s):
     s = re.sub(r".*翻译：", "", s)
     # Remove leading #
     s = re.sub(r"^#*\s", "", s)
+    s = s.replace("**", "")
     return s
 
 

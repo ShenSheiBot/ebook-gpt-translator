@@ -1,4 +1,4 @@
-from apichat import OpenAIChatApp, GoogleChatApp, PoeAPIChatApp, BaichuanChatApp, APITranslationFailure
+from apichat import OpenAIChatApp, GoogleChatApp, PoeAPIChatApp, APITranslationFailure
 from loguru import logger
 import re
 import yaml
@@ -15,16 +15,15 @@ logger.add(f"output/{config['CN_TITLE']}/info.log", colorize=True, level="DEBUG"
 
 def generate_prompt(jp_text, mode="translation"):
     post_prompt = ""
-    if len(jp_text) > 500:
-        post_prompt = "\n\n请用中文回答"
     if 'PROMPT' not in config or config['PROMPT'] == '':
-        config['PROMPT'] = "将下面的英文文本翻译为中文，如果无须翻译则返回原文，不要分析，只返回翻译内容："
-    return config['PROMPT'] + "\n\n" + jp_text + post_prompt
+        config['PROMPT'] = "将下面的英文文本翻译为中文："
+    return config['PROMPT'] + "\n" + jp_text + post_prompt
 
 
 def validate(jp_text, cn_text):
     # Check ratio of Chinese characters to English characters (avg 1.6)
-    if "**" in cn_text and "**" not in jp_text:
+    if "将下面的英文文本翻译为中文：" in cn_text:
+        logger.warning(f"Validation failed: prompt detected in translation: {cn_text}")
         return False
     if len(cn_text) == 0:
         return True
@@ -159,8 +158,6 @@ def translate(jp_text, mode="translation", dryrun=False):
                 api_app = OpenAIChatApp(api_key=model['key'], model_name=model['name'])
             elif 'Poe' in name:
                 api_app = PoeAPIChatApp(api_key=model['key'], model_name=model['name'])
-            elif 'Baichuan' in name:
-                api_app = BaichuanChatApp(api_key=model['key'], model_name=model['name'])
             else:
                 raise ValueError("Invalid model name.")
             
