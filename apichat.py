@@ -10,7 +10,7 @@ import re
 import json
 
 
-SYSTEM_PROMPT = "你是一个翻译机器人。你总是提供外语与中文对照翻译，如果内容无需翻译，你会返回原文。你从不增加额外的分析，只返回翻译后的内容。你从来只回答中文。"
+SYSTEM_PROMPT = "你是一个翻译机器人，将外语翻译为中文。如果内容无需翻译，你会返回原文。你从不增加额外的分析，只返回翻译后的内容。你从来只回答中文。"
 
 
 class APITranslationFailure(Exception):
