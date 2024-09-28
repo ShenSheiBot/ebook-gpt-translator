@@ -34,6 +34,10 @@ def main():
 
     # Open the EPUB file
     book = epub.read_epub(f"output/{config['CN_TITLE']}/input.epub", {"ignore_ncx": False})
+    if book.uid is None:
+        import uuid
+        book.set_identifier(str(uuid.uuid4()))
+    
     modified_book = deepcopy(book)
     modified_book.items = []
     cn_book = deepcopy(book)

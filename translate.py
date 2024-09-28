@@ -16,13 +16,13 @@ logger.add(f"output/{config['CN_TITLE']}/info.log", colorize=True, level="DEBUG"
 def generate_prompt(jp_text, mode="translation"):
     post_prompt = ""
     if 'PROMPT' not in config or config['PROMPT'] == '':
-        config['PROMPT'] = "将下面的英文文本翻译为中文："
+        config['PROMPT'] = "将下面的外文文本翻译为中文："
     return config['PROMPT'] + "\n" + jp_text + post_prompt
 
 
 def validate(jp_text, cn_text):
     # Check ratio of Chinese characters to English characters (avg 1.6)
-    if "将下面的英文文本翻译为中文：" in cn_text:
+    if "将下面的外文文本翻译为中文：" in cn_text:
         logger.warning(f"Validation failed: prompt detected in translation: {cn_text}")
         return False
     if len(cn_text) == 0:
