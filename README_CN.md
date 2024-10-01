@@ -16,6 +16,7 @@ PDF格式暂不支持，推荐由Adobe Acrobat或类似工具转换成EPUB或DOC
 5. 添加下述Repository secrets:
    - `GOOGLE_API_KEY`: 你的 [Gemini API keys](https://aistudio.google.com/app/u/0/apikey?pli=1).
    - `POE_API_KEY`: (可选) 你的 [Poe API keys](https://poe.com/api_key).
+   - `TRANSLATION_CONFIG`: (可选) 为了更高级的配置，你可以提供一个类似于示例 `translation.yaml.example` 文件的 JSON 配置，以使用除 gemini-1.5-flash 之外的模型。
    - `S3_ACCESS_KEY`: 你的 S3 access key. 
    - `S3_SECRET_KEY`: 你的 S3 secret key.
    - `S3_ENDPOINT`: 你的 S3 bucket endpoint.

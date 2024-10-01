@@ -18,6 +18,7 @@ Github actions can be used to automate the translation process if your book is s
 5. Add the following secrets:
    - `GOOGLE_API_KEY`: Your [Gemini API keys](https://aistudio.google.com/app/u/0/apikey?pli=1).
    - `POE_API_KEY`: (Optional) Your [Poe API keys](https://poe.com/api_key).
+   - `TRANSLATION_CONFIG`: (Optional) For more advanced configuration, you can provide a JSON config similar to the example `translation.yaml.example` file to use models other than gemini-1.5-flash.
    - `S3_ACCESS_KEY`: Your S3 access key. 
    - `S3_SECRET_KEY`: Your S3 secret key.
    - `S3_ENDPOINT`: Your S3 bucket endpoint.
