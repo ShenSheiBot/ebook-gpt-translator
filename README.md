@@ -18,7 +18,7 @@ Github actions can be used to automate the translation process if your book is s
 5. Add the following secrets:
    - `GOOGLE_API_KEY`: Your [Gemini API keys](https://aistudio.google.com/app/u/0/apikey?pli=1).
    - `POE_API_KEY`: (Optional) Your [Poe API keys](https://poe.com/api_key).
-   - `TRANSLATION_CONFIG`: (Optional) For more advanced configuration, you can provide a JSON config similar to the example `translation.yaml.example` file to use models other than gemini-1.5-flash.
+   - `TRANSLATION_CONFIG`: (Optional) For more advanced configuration, you can provide a JSON config similar to the example `translation.yaml.example` file to use models other than `gemini-1.5-flash`*.
    - `S3_ACCESS_KEY`: Your S3 access key. 
    - `S3_SECRET_KEY`: Your S3 secret key.
    - `S3_ENDPOINT`: Your S3 bucket endpoint.
@@ -33,6 +33,7 @@ Github actions can be used to automate the translation process if your book is s
 9. Go to the `Actions` tab and manually trigger the workflow.
 10. The translated book will be available in both Chinese and bilingual formats in your S3 bucket.
 
+* The `TRANSLATION_CONFIG` supports all google models (make sure your config entry name contains "Gemini"), all poe models (make sure your config entry name contains "Poe"), and all other models supported by [LiteLLM](https://docs.litellm.ai/docs/providers). Note that the `gemini-1.5-flash` **does not** need to be prefixed as `gemini/gemini-1.5-flash` as in LiteLLM, unless you don't include "Gemini" in the name.
 
 
 ## Running Locally
