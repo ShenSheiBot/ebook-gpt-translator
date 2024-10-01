@@ -125,8 +125,8 @@ def align_translate(text_list, buffer, dryrun=False):
 
 
 def translate(jp_text, mode="translation", dryrun=False):
-    # If number of english letters is less than 2, return directly
-    if len(re.findall(r'[a-zA-Z]', jp_text)) < 2:
+    # If number of non-digit letters is less than 2, return directly
+    if len(re.findall(r'[^\d]', jp_text)) < 2:
         return jp_text
            
     flag = True
@@ -167,6 +167,8 @@ def translate(jp_text, mode="translation", dryrun=False):
             while flag and retry_count > 0:
                 try:
                     cn_text = api_app.chat(prompt)
+                    if type(cn_text) is not str:
+                        raise APITranslationFailure(f"Result is not string: {cn_text}")
                     if not validate(jp_text, cn_text):
                         raise APITranslationFailure(f"Validation failed: {cn_text}")
                     flag = False

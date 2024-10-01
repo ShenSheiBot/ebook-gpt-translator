@@ -29,6 +29,7 @@ pymupdf = "^1.24.10"
 numpy = "^2.1.1"
 pillow = "^10.4.0"
 opencv-python = "^4.10.0.84"
+litellm = "^1.48.6"
 
 [build-system]
 requires = ["poetry-core"]
