@@ -77,6 +77,16 @@ def align_translate(text_list, buffer, dryrun=False):
                 
                 ### Match translated line to the corresponding indices
                 cn_block_list = cn_text.strip().split('\n')
+                cn_block_list = [line for line in cn_block_list if line.strip()]  # Remove empty lines
+                
+                if len(cn_block_list) == len(block_list):
+                    # If the number of lines matches, assign leading numbers from original block_list
+                    cn_block_list = [
+                        f"{get_leading_numbers(block_list[i])} {cn_block_list[i].lstrip('0123456789. ')}"
+                        for i in range(len(block_list))
+                    ]
+                    break
+                
                 cn_block_list = [line for line in cn_block_list if get_leading_numbers(line) is not None]
                 if len(cn_block_list) == 0:
                     continue
@@ -105,7 +115,7 @@ def align_translate(text_list, buffer, dryrun=False):
                     break
                 else:
                     retry_count -= 1
-            
+
             flag = True
             if len(cn_block_list) != len(block_list):
                 logger.critical(f"Failed to translate {text} after {config['TRANSLATION_TITLE_RETRY_COUNT']} retries.")
