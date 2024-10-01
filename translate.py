@@ -1,4 +1,4 @@
-from apichat import OpenAIChatApp, GoogleChatApp, PoeAPIChatApp, APITranslationFailure
+from apichat import LiteLLMChatApp, GoogleChatApp, PoeAPIChatApp, APITranslationFailure
 from loguru import logger
 import re
 import yaml
@@ -13,11 +13,10 @@ config = load_config()
 logger.add(f"output/{config['CN_TITLE']}/info.log", colorize=True, level="DEBUG")
 
 
-def generate_prompt(jp_text, mode="translation"):
-    post_prompt = ""
+def generate_prompt(jp_text):
     if 'PROMPT' not in config or config['PROMPT'] == '':
         config['PROMPT'] = "将下面的外文文本翻译为中文："
-    return config['PROMPT'] + "\n" + jp_text + post_prompt
+    return config['PROMPT'] + "\n" + jp_text
 
 
 def validate(jp_text, cn_text):
@@ -138,28 +137,20 @@ def translate(jp_text, mode="translation", dryrun=False):
     logger.info("\n------ JP Message ------\n\n" + jp_text + "\n------------------------\n\n")
     
     for name, model in translation_config.items():
-        
-        if "Sakura" in name:
-            prompt = generate_prompt(jp_text, mode="sakura")
-            logger.info("\n-------- Prompt --------\n\n" + prompt + "\n------------------------\n\n")
-        else:
-            prompt = generate_prompt(jp_text, mode=mode)
-            logger.info("\n-------- Prompt --------\n\n" + prompt + "\n------------------------\n\n")
+        prompt = generate_prompt(jp_text)
+        logger.info("\n-------- Prompt --------\n\n" + prompt + "\n------------------------\n\n")
         
         retry_count = model['retry_count']
-        
         logger.info("Translating using " + name + " ...")
         
         ### API translation
         if model['type'] == 'api':
-            if 'Gemini' in name:
+            if 'gemini' in name.lower():
                 api_app = GoogleChatApp(api_key=model['key'], model_name=model['name'])
-            elif 'OpenAI' in name:
-                api_app = OpenAIChatApp(api_key=model['key'], model_name=model['name'])
-            elif 'Poe' in name:
+            elif 'poe' in name.lower():
                 api_app = PoeAPIChatApp(api_key=model['key'], model_name=model['name'])
             else:
-                raise ValueError("Invalid model name.")
+                api_app = LiteLLMChatApp(api_key=model['key'], model_name=model['name'])
             
             backoff_time = 2  # Start with 2 seconds
             max_backoff_time = 64  # Maximum backoff time
@@ -195,6 +186,8 @@ def translate(jp_text, mode="translation", dryrun=False):
     if mode == "remove_annotation":
         return translate(cn_text, mode="polish", dryrun=dryrun)
 
+    if type(cn_text) is not str:
+        cn_text = "翻译失败"
     logger.info("\n------ CN Message ------\n\n" + cn_text + "\n------------------------\n\n")
                         
     return cn_text

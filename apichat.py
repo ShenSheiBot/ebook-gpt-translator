@@ -2,15 +2,18 @@ from openai import OpenAI
 import openai
 import google.generativeai as genai
 import yaml
-import time
 import asyncio
 import fastapi_poe as fp
-import requests
-import re
-import json
+from litellm import completion
 
 
 SYSTEM_PROMPT = "你是一个翻译机器人，将外语翻译为中文。如果内容无需翻译，你会返回原文。你从不增加额外的分析，只返回翻译后的内容。你从来只回答中文。"
+SAFETY_SETTINGS = [
+    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+]
 
 
 class APITranslationFailure(Exception):
@@ -34,33 +37,25 @@ class APIChatApp:
 
     def chat(self, message):
         raise NotImplementedError("Subclasses must implement this method")
-
-
-class OpenAIChatApp(APIChatApp):
-    def __init__(self, api_key, model_name, temperature=0.7):
+    
+    
+class LiteLLMChatApp(APIChatApp):
+    def __init__(self, api_key, model_name, temperature=1.0):
         super().__init__(api_key, model_name, temperature)
-        if model_name in ['gpt-3.5-turbo']:
-            base_url = "https://api.openai.com/v1"
-        else:
-            base_url = "http://localhost:7999/v1"
-        # print(base_url)
-        self.client = OpenAI(
-            api_key=api_key,
-            base_url=base_url
-        )
-
+        
     def chat(self, message):
+        self.messages.append({"role": "user", "content": message})
         try:
-            response = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=self.messages,
-                temperature=self.temperature
+            response = completion(
+                messages=self.messages, model=self.model_name, 
+                api_key=self.api_key, temperature=self.temperature,
+                **({"safety_settings": SAFETY_SETTINGS} if "gemini" in self.model_name.lower() else {})
             )
-            self.messages.append([{"role": "assistant", "content": response.choices[0].message.content}])
-            self.response = response
-            return response.choices[0].message.content
-        except openai.APIError as e:
-            raise APITranslationFailure(f"OpenAI API connection failed: {str(e)}")
+            response = response.choices[0].message.content
+            self.messages += [{"role": "assistant", "content": response}]
+            return response
+        except Exception as e:
+            raise APITranslationFailure(f"LiteLLM API connection failed: {str(e)}")
 
 
 class GoogleChatApp(APIChatApp):
@@ -68,12 +63,7 @@ class GoogleChatApp(APIChatApp):
         super().__init__(api_key, model_name, temperature)
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(self.model_name, system_instruction=SYSTEM_PROMPT)
-        self.SAFETY_SETTINGS = [
-            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-        ]
+        self.SAFETY_SETTINGS = SAFETY_SETTINGS
 
     def chat(self, message, image=None):
         if image:

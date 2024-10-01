@@ -8,24 +8,6 @@
     "Poe-api": {
         "name": "Gemini-1.5-Flash",
         "type": "api",
-        "retry_count": 1,
-        "key": "POE-API-KEY"
-    },
-    "Poe-api-chatgpt": {
-        "name": "ChatGPT",
-        "type": "api",
-        "retry_count": 3,
-        "key": "POE-API-KEY"
-    },
-    "Poe-api-gpt3.5": {
-        "name": "GPT-3.5-Turbo",
-        "type": "api",
-        "retry_count": 3,
-        "key": "POE-API-KEY"
-    },
-    "OpenAI-GPT-3.5-Turbo-api": {
-        "name": "gpt-3.5-turbo",
-        "type": "api",
         "retry_count": 3,
         "key": "POE-API-KEY"
     }
