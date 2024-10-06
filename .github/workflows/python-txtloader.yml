@@ -42,6 +42,7 @@ jobs:
         sed -i 's/CN-TITLE/'"${{ vars.CN_TITLE }}"'/g' .env.example
         sed -i 's/JP-TITLE/'"${{ vars.JP_TITLE }}"'/g' .env.example
         sed -i 's/PROMPT-EXAMPLE/'"${{ vars.PROMPT }}"'/g' .env.example
+        sed -i 's/BILLING-EXAMPLE/'"${{ vars.BILLING }}"'/g' .env.example
         sed -i 's/TRANSLATION-TITLE-RETRY-COUNT/'"${{ vars.TRANSLATION_TITLE_RETRY_COUNT }}"'/g' .env.example
         mv .env.example .env
         cat .env

@@ -177,7 +177,10 @@ def translate(jp_text, mode="translation", dryrun=False):
                     if 'quota' in str(e):
                         retry_count += 1
                     logger.critical(f"API translation failed: {e}")
-                    time.sleep(backoff_time)
+                    if 'BILLING' in config and config['BILLING'] == 'True':
+                        pass
+                    else:
+                        time.sleep(backoff_time)
                     logger.debug(f"Retrying in {backoff_time} seconds ...")
                     backoff_time = min(backoff_time * 2, max_backoff_time)  # Exponential backoff
                     pass
@@ -198,7 +201,8 @@ def translate(jp_text, mode="translation", dryrun=False):
 
     if type(cn_text) is not str:
         cn_text = "翻译失败"
-    logger.info("\n------ CN Message ------\n\n" + cn_text + "\n------------------------\n\n")
+    else:
+        logger.info("\n------ CN Message ------\n\n" + cn_text + "\n------------------------\n\n")
                         
     return cn_text
 
