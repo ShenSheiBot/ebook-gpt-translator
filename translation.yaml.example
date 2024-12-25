@@ -1,6 +1,6 @@
 {
     "Gemini-Pro-api": {
-        "name": "gemini-1.5-flash",
+        "name": "gemini-2.0-flash-exp",
         "type": "api",
         "retry_count": 3,
         "key": "GOOGLE-API-KEY"
