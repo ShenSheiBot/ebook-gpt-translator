@@ -6,7 +6,7 @@ from loguru import logger
 from copy import deepcopy
 from ebooklib import epub
 import json
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 
 
 def postprocess(s):
