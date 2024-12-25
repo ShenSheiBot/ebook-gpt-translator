@@ -1,4 +1,4 @@
-from apichat import LiteLLMChatApp, GoogleChatApp, PoeAPIChatApp, APITranslationFailure
+from apichat import LiteLLMChatApp, GoogleChatApp, PoeAPIChatApp, AnthropicChatApp, OpenAIChatApp, APITranslationFailure
 from loguru import logger
 import re
 import yaml
@@ -20,6 +20,10 @@ def generate_prompt(jp_text):
 
 
 def validate(jp_text, cn_text):
+    if "不需要翻译" in cn_text or "无需翻译" in cn_text:
+        return False
+    if jp_text.startswith("http"):
+        return False
     # Check ratio of Chinese characters to English characters (avg 1.6)
     if "将下面的外文文本翻译为中文：" in cn_text:
         logger.warning(f"Validation failed: prompt detected in translation: {cn_text}")
@@ -137,7 +141,12 @@ def translate(jp_text, mode="translation", dryrun=False):
     # If number of non-digit letters is less than 2, return directly
     if len(re.findall(r'[^\d]', jp_text)) < 2:
         return jp_text
-           
+    
+    # If it's a web link, return directly
+    if jp_text.startswith("https") or jp_text.startswith("http"):
+        # all valid characters in a URL
+        return jp_text
+
     flag = True
     cn_text = '翻译失败'
     
@@ -159,6 +168,10 @@ def translate(jp_text, mode="translation", dryrun=False):
                 api_app = GoogleChatApp(api_key=model['key'], model_name=model['name'])
             elif 'poe' in name.lower():
                 api_app = PoeAPIChatApp(api_key=model['key'], model_name=model['name'])
+            elif 'claude' in name.lower():
+                api_app = AnthropicChatApp(api_key=model['key'], model_name=model['name'])
+            elif 'openai' in name.lower():
+                api_app = OpenAIChatApp(api_key=model['key'], model_name=model['name'], endpoint=model['endpoint'])
             else:
                 api_app = LiteLLMChatApp(api_key=model['key'], model_name=model['name'])
             
@@ -168,6 +181,8 @@ def translate(jp_text, mode="translation", dryrun=False):
             while flag and retry_count > 0:
                 try:
                     cn_text = api_app.chat(prompt)
+                    if "已经是中文" in cn_text:
+                        return jp_text
                     if type(cn_text) is not str:
                         raise APITranslationFailure(f"Result is not string: {cn_text}")
                     if not validate(jp_text, cn_text):
