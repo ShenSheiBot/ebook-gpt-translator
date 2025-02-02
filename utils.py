@@ -65,15 +65,31 @@ def txt_to_html(text, tag="p"):
 
 def get_filtered_tags(soup):
     def is_eligible_div(tag):
-        # A div is eligible if it does not contain any of the specified tags
         return tag.name == 'div' and not tag.find_all(['h1', 'h2', 'h3', 'p', 'div', 'blockquote'])
 
-    # Find all eligible elements, including divs
+    # Get all eligible elements
     eligible_elements = soup.find_all(['h1', 'h2', 'h3', 'p', 'blockquote']) + soup.find_all(is_eligible_div)
     
+    # Create a list to store elements with unique text content
+    unique_elements = []
+    seen_text = set()
+    
+    for element in eligible_elements:
+        # Get normalized text content (strip whitespace and normalize spaces)
+        text_content = ' '.join(element.get_text().split())
+        
+        # Skip empty elements
+        if not text_content:
+            continue
+            
+        # If we haven't seen this text before, or if it's a header (which we always want to keep)
+        if text_content not in seen_text or element.name in ['h1', 'h2', 'h3']:
+            unique_elements.append(element)
+            seen_text.add(text_content)
+    
     # Sort elements by their position in the document
-    sorted_elements = sorted(eligible_elements, key=lambda x: x.parent.contents.index(x))
-
+    sorted_elements = sorted(unique_elements, key=lambda x: x.parent.contents.index(x))
+    
     return sorted_elements
 
 
