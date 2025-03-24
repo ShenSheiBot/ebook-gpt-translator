@@ -6,7 +6,7 @@ from loguru import logger
 from copy import deepcopy
 from ebooklib import epub
 import json
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString
 
 
 def postprocess(s):
@@ -16,6 +16,24 @@ def postprocess(s):
     s = re.sub(r"^#*\s", "", s)
     s = s.replace("**", "")
     return s
+
+
+# 二（に）階（かい）堂（どう）亞（あ）子（こ）-> 二階堂亞子（にかいどうあこ）
+def concat_kanji_rubi(text):
+    kanji_kana_groups = []
+    pattern = r'(([\u4E00-\u9FFF])[\（\(]([\u3040-\u309F\u30A0-\u30FA\u30FC-\u30FF]+)[\）\)])+'
+
+    def replacement(match):
+        # Here we find all submatches of the Kanji-Kana pattern within the full match.
+        submatches = re.findall(
+            r"([\u4E00-\u9FFF])[\（\(]([\u3040-\u309F\u30A0-\u30FA\u30FC-\u30FF]+)[\）\)]",
+            match.group(0),
+        )
+        kanjis = ''.join(submatch[0] for submatch in submatches)
+        kanas = ''.join(submatch[1] for submatch in submatches)
+        kanji_kana_groups.append(f'{kanas}')
+        return f'{kanjis}（{kanas}）'
+    return re.sub(pattern, replacement, text)
 
 
 def load_config(filepath=".env"):
@@ -65,30 +83,47 @@ def txt_to_html(text, tag="p"):
 
 def get_filtered_tags(soup):
     def is_eligible_div(tag):
-        return tag.name == 'div' and not tag.find_all(['h1', 'h2', 'h3', 'p', 'div', 'blockquote'])
+        # A div is eligible if it does not contain any of the specified tags
+        return tag.name == "div" and not tag.find_all(
+            [
+                "h1",
+                "h2",
+                "h3",
+                "h4",
+                "h5",
+                "h6",
+                "p",
+                "div",
+                "blockquote",
+                "img",
+                "image",
+            ]
+        )
 
-    # Get all eligible elements
-    eligible_elements = soup.find_all(['h1', 'h2', 'h3', 'p', 'blockquote']) + soup.find_all(is_eligible_div)
+    def get_text_or_create_span(element):
+        if isinstance(element, NavigableString):
+            new_span = soup.new_tag("span")
+            new_span.string = element.strip()
+            element.replace_with(new_span)
+            return new_span
+        return element
     
-    # Create a list to store elements with unique text content
-    unique_elements = []
-    seen_text = set()
+    # Process direct text in divs
+    for div in soup.find_all("div"):
+        div.contents[:] = [get_text_or_create_span(child) for child in div.contents]
     
-    for element in eligible_elements:
-        # Get normalized text content (strip whitespace and normalize spaces)
-        text_content = ' '.join(element.get_text().split())
-        
-        # Skip empty elements
-        if not text_content:
-            continue
-            
-        # If we haven't seen this text before, or if it's a header (which we always want to keep)
-        if text_content not in seen_text or element.name in ['h1', 'h2', 'h3']:
-            unique_elements.append(element)
-            seen_text.add(text_content)
+    # Traverse the document in order and collect elements
+    sorted_elements = []
     
-    # Sort elements by their position in the document
-    sorted_elements = sorted(unique_elements, key=lambda x: x.parent.contents.index(x))
+    # Traverse the document in natural order and collect eligible elements
+    for element in soup.descendants:
+        if hasattr(element, 'name'):  # Skip NavigableString objects
+            if element.name in ["h1", "h2", "h3", "h4", "h5", "h6", "p", "blockquote"]:
+                sorted_elements.append(element)
+            elif element.name == "div" and is_eligible_div(element):
+                sorted_elements.append(element)
+            elif element.name == "span":
+                sorted_elements.append(element)
     
     return sorted_elements
 
