@@ -171,6 +171,9 @@ def main():
                             last_text.insert_after(deepcopy(new_text))
                         cnonly.decompose()
                         title.insert_after(new_text)
+                        if title.name == 'span':
+                            # Add empty <p>
+                            title.insert_after(soup.new_tag("p"))
                         last_text = new_text
 
                         for img in imgs:
