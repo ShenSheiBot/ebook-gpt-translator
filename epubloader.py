@@ -11,6 +11,7 @@ import yaml
 import time
 from translate import translate, align_translate, validate, SqlWrapper
 from utils import load_config, update_content, get_filtered_tags, replace_section_titles, postprocess
+from utils import wrap_text, unwrap_text
 
 
 warnings.filterwarnings('ignore', category=XMLParsedAsHTMLWarning)
@@ -94,8 +95,9 @@ def main():
                 current_time = time.time()
                 
                 # Parse HTML and extract text
-                soup = BeautifulSoup(item.content.decode("utf-8"), "html5lib")
-                cn_soup = BeautifulSoup(item.content.decode("utf-8"), "html5lib")
+                content = wrap_text(item.content.decode("utf-8"))
+                soup = BeautifulSoup(content, "html5lib")
+                cn_soup = BeautifulSoup(content, "html5lib")
                 
                 for rt_tag in soup.find_all("rt"):
                     rt_tag.decompose()

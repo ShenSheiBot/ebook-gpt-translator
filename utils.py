@@ -6,7 +6,7 @@ from loguru import logger
 from copy import deepcopy
 from ebooklib import epub
 import json
-from bs4 import BeautifulSoup, NavigableString
+from bs4 import BeautifulSoup, NavigableString, Comment
 
 
 def postprocess(s):
@@ -682,6 +682,83 @@ def remove_common_suffix(s1, s2):
         s2 = s2[:-common_suffix_length]
 
     return s1, s2
+
+
+def wrap_text(html_content: str) -> str:
+    """
+    1) Unwrap <span> so that only text remains.
+    2) Flatten <ruby>...</ruby> by concatenating the 'base text' plus the last <rt>.
+    3) Merge consecutive text nodes (soup.smooth()), so adjacent text is combined.
+    4) Finally wrap each textual segment in <span class="temp">, 
+       except for those inside <head>, <title>, <meta>, <link>, <script>, <style>, etc.
+    """
+    soup = BeautifulSoup(html_content, 'html.parser')
+
+    # 1) Unwrap all <span> so only text remains
+    for tag in soup.find_all("span"):
+        # Replace the entire <span> with its textual content
+        tag.replace_with(tag.get_text())
+
+    # 2) Flatten <ruby> by concatenating the base text + the last <rt>
+    #    Example: <ruby>梶<rt>かじ</rt>原<rt>わら</rt>一<rt>いつ</rt>騎<rt>き</rt></ruby>
+    #    becomes "梶原一騎き"
+    for ruby_tag in soup.find_all("ruby"):
+        base_text_parts = []
+        last_rt_text = ""
+        # Iterate over children in order
+        for child in ruby_tag.children:
+            if child.name == "rt":
+                # update last rt text
+                if child.string:
+                    last_rt_text = child.string.strip()
+            elif isinstance(child, NavigableString):
+                # accumulate any plain text outside <rt>
+                base_text_parts.append(child.strip())
+
+        base_text = "".join(base_text_parts)
+        flattened = base_text + last_rt_text  # e.g., "梶原一騎" + "き" = "梶原一騎き"
+        # Replace the <ruby> element with the flattened text
+        ruby_tag.replace_with(flattened)
+
+    # 3) Merge consecutive text nodes so we don’t wrap them separately
+    #    Beautiful Soup's .smooth() merges adjacent NavigableString siblings into one
+    soup.smooth()
+
+    # 4) Wrap all remaining text nodes (that aren’t whitespace or comments)
+    #    in <span class="temp">, skipping forbidden parent tags
+    no_wrap_tags = {"head", "title", "meta", "link", "script", "style", "noscript"}
+
+    for text_node in soup.find_all(string=True):
+        # Skip empty or whitespace
+        if not text_node.strip():
+            continue
+        # Skip comments
+        if isinstance(text_node, Comment):
+            continue
+        # Skip if parent is one of the 'no_wrap_tags'
+        if text_node.parent and text_node.parent.name.lower() in no_wrap_tags:
+            continue
+
+        # At this point, we want to wrap the text node
+        new_span = soup.new_tag("span", attrs={"class": "temp"})
+        new_span.string = text_node
+        text_node.replace_with(new_span)
+
+    return str(soup)
+
+
+def unwrap_text(html_content: str) -> str:
+    """
+    Finds all <span class="temp"> ... </span> elements and unwraps them 
+    (removes the span, keeps the original text).
+    """
+    soup = BeautifulSoup(html_content, 'html.parser')
+    
+    # Find all <span class="temp"> elements
+    for temp_span in soup.find_all("span", class_="temp"):
+        temp_span.unwrap()
+    
+    return str(soup)
 
 
 if __name__ == "__main__":
