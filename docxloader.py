@@ -135,12 +135,13 @@ def process_paragraphs(doc):
     and how they're connected.
     """
     last_char = ""
-    style = None
+    prev_style = None
     prev_paragraph = None
     paragraph_maps = {}
     final_paragraphs = set()
 
     for i, paragraph in enumerate(doc.paragraphs):
+        style = get_style(paragraph)
         if paragraph.text.strip() == "":
             continue
         elif (
@@ -153,13 +154,13 @@ def process_paragraphs(doc):
         elif (
             (last_char.isalnum() or last_char == ",")
             and (paragraph.text.strip()[0].isalnum())
-        ) and get_style(paragraph)[1] == style:
+        ) and style == prev_style:
             last_char = paragraph.text.strip()[-1]
             paragraph_maps[i] = prev_paragraph
             prev_paragraph = i
         else:
             last_char = paragraph.text.strip()[-1]
-            style = get_style(paragraph)
+            prev_style = get_style(paragraph)
             if prev_paragraph:
                 final_paragraphs.add(prev_paragraph)
             prev_paragraph = i
