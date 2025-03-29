@@ -168,7 +168,8 @@ def main():
                         if cnonly.parent:
                             cnonly.insert_after(deepcopy(new_text))
                         else:
-                            last_text.insert_after(deepcopy(new_text))
+                            if last_text:
+                                last_text.insert_after(deepcopy(new_text))
                         cnonly.decompose()
                         title.insert_after(new_text)
                         if title.name == 'span':
