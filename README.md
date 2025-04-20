@@ -14,23 +14,23 @@ Github actions can be used to automate the translation process if your book is s
 1. Fork this repository.
 2. Go to the `Settings` tab of your forked repository.
 3. Go to the `Secrets and variables - Actions` tab.
-4. (Optional) If you don't have a S3 bucket, you can get free 10GB storage at [Cloudflare](https://developers.cloudflare.com/r2/). Go to R2 - Manage R2 API Tokens - Create API Token. Allow read and write. Take a note of the access key, secret key, and endpoint (full URL, including https://).
-5. Add the following secrets:
+4. (Optional, if you have a US credit card) If you don't have a S3 bucket, you can get free 10GB storage at [Cloudflare](https://developers.cloudflare.com/r2/). Go to R2 - Manage R2 API Tokens - Create API Token. Allow read and write. Take note of the access key, secret key, and endpoint (full URL, including https://). Create a S3 bucket named `book`.
+5. (Optional, recommended) If you don't have a US credit card, you can also get free 10GB storage at [Backblaze](https://www.backblaze.com/). After registering an account, first enable B2 cloud storage in [My Settings](https://secure.backblaze.com/account_settings.htm), then generate a new master application key in [Application Keys](https://secure.backblaze.com/app_keys.htm) (you can record the keyID and applicationKey, but they won't be used). Create a S3 bucket named `translator`, and note down the Endpoint. Add "https://" in front of it to get the S3_ENDPOINT you'll need later. Then add a new application key, select allow access to all buckets, and record the keyID (your future access key) and applicationKey (your future secret key).
+6. Add the following Repository secrets:
    - `GOOGLE_API_KEY`: Your [Gemini API keys](https://aistudio.google.com/app/u/0/apikey?pli=1).
    - `POE_API_KEY`: (Optional) Your [Poe API keys](https://poe.com/api_key).
    - `TRANSLATION_CONFIG`: (Optional) For more advanced configuration, you can provide a JSON config similar to the example `translation.yaml.example` file to use models other than `gemini-1.5-flash`*.
    - `S3_ACCESS_KEY`: Your S3 access key. 
    - `S3_SECRET_KEY`: Your S3 secret key.
    - `S3_ENDPOINT`: Your S3 bucket endpoint.
-6. Go to the `Variables` tab and add the following variables:
+7. Go to the `Variables` tab and add the following Repository variables:
    - `CN_TITLE`: The Chinese name of the book.
    - `JP_TITLE`: The Foreign name of the book.
-   - `TRANSLATION_TITLE_RETRY_COUNT`: The number of times to retry the batch translation of multiple lines (SRT / Epub title). Recommended 5 times (at least 3 times). 
-   - `DRYRUN`, if set to `True`, then the translation process will be simulated without actually translating the book. Also useful if you don't want to translate rest of the book.
-   - `PROMPT`: (Optional) default to "将下面的外文文本翻译为中文："
-   - `BILLING`: (Optional) If billing is enabled (set to True), the translation will not exponentially wait for a certain time on translation failure.
-7. Create a local folder of the name `CN_TITLE` and place the book file in the folder. Rename the file to `input.docx`, `input.epub` or `input.srt`.
-8. Create a s3 bucket `book`. Upload the folder to Cloudflare S3 bucket `book`. (**ATTENTION**: Keep the folder structure, don't upload the file directly to the bucket)
+   - `TRANSLATION_TITLE_RETRY_COUNT`: The number of times to retry the batch translation of multiple lines. Recommended 5 times (at least 3 times). 
+   - `DRYRUN`: If set to `True`, the translation process will be simulated, with all content translated to "To be translated". This is also useful if you've translated half of the book and don't want to translate the rest.
+   - `PROMPT`: (Optional) Defaults to "将下面的外文文本翻译为中文："
+   - `BILLING`: (Optional) If billing is enabled (set to True), translation will not wait exponentially for a certain time when translation fails.
+8. Create a local folder with the name matching your `CN_TITLE` variable, and place the book file in the folder. Rename the file to `input.docx`, `input.epub`, or `input.srt`. Upload the folder to your S3 bucket.
 9. Go to the `Actions` tab and manually trigger the workflow.
 10. The translated book will be available in both Chinese and bilingual formats in your S3 bucket.
 

@@ -36,6 +36,11 @@ def main():
     parser.add_argument("--final", action="store_true", help="Run upload once and then quit")
 
     args = parser.parse_args()
+    
+    # Use 'translator' as bucket name if endpoint contains backblazeb2.com and bucket_name is default
+    if "backblazeb2.com" in args.endpoint_url and args.bucket_name == "book":
+        args.bucket_name = "translator"
+        print(f"Backblaze B2 detected. Using bucket name: {args.bucket_name}")
 
     session = boto3.session.Session()
     s3_client = session.client(
