@@ -6,7 +6,14 @@ from loguru import logger
 from copy import deepcopy
 from ebooklib import epub
 import json
-from bs4 import BeautifulSoup, NavigableString, Comment
+from bs4 import BeautifulSoup, NavigableString, Comment, Tag
+
+
+BLOCK_NAMES = {"h1", "h2", "h3", "h4", "h5", "h6", "p", "blockquote"}
+DIV_CHILD_BLOCKS = BLOCK_NAMES | {"div", "img", "image"}
+SPAN_PARENTS = BLOCK_NAMES
+TRANSLATED_ATTR = "data-translated"
+JP_RE = re.compile(r"[\u3040-\u30FF]")
 
 
 def postprocess(s):
@@ -81,51 +88,77 @@ def txt_to_html(text, tag="p"):
     return "\n".join(html_paragraphs)
 
 
-def get_filtered_tags(soup):
-    def is_eligible_div(tag):
-        # A div is eligible if it does not contain any of the specified tags
-        return tag.name == "div" and not tag.find_all(
-            [
-                "h1",
-                "h2",
-                "h3",
-                "h4",
-                "h5",
-                "h6",
-                "p",
-                "div",
-                "blockquote",
-                "img",
-                "image",
-            ]
-        )
+def get_filtered_tags(soup: BeautifulSoup):
+    targets, queued_texts = [], set()
 
-    def get_text_or_create_span(element):
-        if isinstance(element, NavigableString):
-            new_span = soup.new_tag("span")
-            new_span.string = element.strip()
-            element.replace_with(new_span)
-            return new_span
-        return element
-    
-    # Process direct text in divs
-    for div in soup.find_all("div"):
-        div.contents[:] = [get_text_or_create_span(child) for child in div.contents]
-    
-    # Traverse the document in order and collect elements
-    sorted_elements = []
-    
-    # Traverse the document in natural order and collect eligible elements
-    for element in soup.descendants:
-        if hasattr(element, 'name'):  # Skip NavigableString objects
-            if element.name in ["h1", "h2", "h3", "h4", "h5", "h6", "p", "blockquote"]:
-                sorted_elements.append(element)
-            elif element.name == "div" and is_eligible_div(element):
-                sorted_elements.append(element)
-            elif element.name == "span":
-                sorted_elements.append(element)
-    
-    return sorted_elements
+    # depth‑first traversal with an explicit stack so we can
+    # carry a “blocked” flag down the tree
+    stack = [(soup, False)]          # (node, blocked_above)
+
+    while stack:
+        node, blocked = stack.pop()
+
+        if isinstance(node, NavigableString):
+            continue
+
+        # (a) if blocked above, propagate
+        if blocked:
+            stack.extend((child, True) for child in reversed(node.contents))
+            continue
+
+        # (b) if this node or an ancestor is already translated
+        if node.has_attr(TRANSLATED_ATTR):
+            stack.extend((child, True) for child in reversed(node.contents))
+            continue
+
+        name = node.name  # BeautifulSoup/lxml keeps tag names lowercase
+
+        # -----------------------------------------------------------
+        # Decide whether *this* node should be queued
+        # -----------------------------------------------------------
+        keep = False
+        if name in BLOCK_NAMES:
+            keep = True
+        elif name == "div":
+            # clean? – only inspect *direct* children
+            keep = not any(
+                isinstance(c, Tag) and c.name in DIV_CHILD_BLOCKS
+                for c in node.contents
+            )
+        elif name == "span":
+            # ignore spans inside a block that will itself be processed
+            parent = node.parent
+            if not (parent and parent.name in SPAN_PARENTS):
+                keep = True
+
+        if keep:
+            text = node.get_text(strip=True)
+            if text and text not in queued_texts:
+                targets.append(node)
+                queued_texts.add(text)
+                # children don’t need a blocked flag because we won’t iterate
+                # into them at all:
+                continue
+
+        # not queued – recurse into children
+        stack.extend((child, False) for child in reversed(node.contents))
+
+    # Step 1 (wrapping raw text in clean divs) can be done lazily:
+    for div in (t for t in targets if t.name == "div"):
+        new_contents = []
+        for child in div.contents:
+            if isinstance(child, NavigableString):
+                txt = child.strip()
+                if txt:
+                    span = soup.new_tag("span")
+                    span.string = txt
+                    span[TRANSLATED_ATTR] = "src"
+                    new_contents.append(span)
+                    continue
+            new_contents.append(child)
+        div.contents[:] = new_contents
+
+    return targets
 
 
 def split_string_by_paragraphs(text):

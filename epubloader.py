@@ -20,6 +20,7 @@ with open("translation.yaml", "r") as f:
     translation_config = yaml.load(f, Loader=yaml.FullLoader)
 webapp = None
 MAX_LENGTH = 4000
+TRANSLATED_ATTR = "data-translated"
 
 
 def main():
@@ -109,6 +110,8 @@ def main():
                 
                 last_text = None
                 for title, cnonly in zip(titles_and_paragraphs, cn_titles_and_paragraphs):
+                    if title.find_all(attrs={TRANSLATED_ATTR: True}):
+                        continue
                     if title.name in ['h1', 'h2', 'h3']:
                         jp_title = title.get_text().strip()
                         if jp_title in title_buffer and validate(jp_title, title_buffer[jp_title]):
@@ -127,6 +130,7 @@ def main():
                         cn_title = postprocess(cn_title)
                             
                         new_title = soup.new_tag(title.name, **{k: v for k, v in title.attrs.items()})
+                        new_title[TRANSLATED_ATTR] = "zh"
                         new_title.string = title.get_text().replace(jp_title, cn_title)
                         cnonly.insert_after(deepcopy(new_title))
                         cnonly.decompose()
@@ -165,6 +169,7 @@ def main():
                         
                         new_text = soup.new_tag(title.name, **{k: v for k, v in title.attrs.items()})
                         new_text.string = cn_text
+                        new_text[TRANSLATED_ATTR] = "zh"
                         if cnonly.parent:
                             cnonly.insert_after(deepcopy(new_text))
                         else:
